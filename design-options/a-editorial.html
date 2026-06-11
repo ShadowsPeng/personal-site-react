@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案 A · 杂志编辑风</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#f7f3ec; --ink:#1c1a16; --ink-2:#6b6459; --line:#d8d2c6;
+  --red:#c0392b;
+}
+body{background:var(--paper);color:var(--ink);font-family:'Inter','Microsoft YaHei',sans-serif;font-weight:300;line-height:1.7}
+.serif{font-family:'Noto Serif SC','SimSun',serif}
+
+/* 顶栏 */
+.nav{display:flex;justify-content:space-between;align-items:baseline;padding:28px 56px;border-bottom:2px solid var(--ink)}
+.nav-logo{font-family:'Noto Serif SC',serif;font-weight:900;font-size:20px}
+.nav-links{display:flex;gap:32px;list-style:none;font-size:12px;letter-spacing:.12em}
+.nav-links a{color:var(--ink-2);text-decoration:none}
+.nav-links a:hover{color:var(--red)}
+.nav-issue{font-size:11px;color:var(--ink-2);letter-spacing:.1em}
+
+/* HERO：报头式 */
+.hero{padding:90px 56px 70px;border-bottom:1px solid var(--line)}
+.hero-kicker{display:flex;align-items:center;gap:16px;font-size:12px;letter-spacing:.2em;color:var(--red);margin-bottom:28px}
+.hero-kicker::after{content:'';flex:1;height:1px;background:var(--line)}
+.hero h1{font-family:'Noto Serif SC','SimSun',serif;font-weight:900;font-size:clamp(64px,11vw,150px);line-height:1.04;letter-spacing:.04em}
+.hero h1 .en{display:block;font-weight:400;font-style:italic;font-size:.28em;letter-spacing:.14em;color:var(--ink-2);margin-top:18px;font-family:Georgia,serif}
+.hero-deck{display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-top:60px;align-items:end}
+.hero-deck p{font-size:16px;line-height:2.1;color:var(--ink-2);max-width:420px}
+.hero-deck p strong{color:var(--ink);font-weight:500}
+.hero-meta{display:flex;gap:0;border:1px solid var(--ink)}
+.hero-meta div{flex:1;padding:18px 22px;border-right:1px solid var(--ink);font-size:12px;letter-spacing:.1em}
+.hero-meta div:last-child{border-right:none}
+.hero-meta b{display:block;font-family:'Noto Serif SC',serif;font-size:26px;font-weight:600;margin-bottom:4px;letter-spacing:0}
+
+/* 章节标题 */
+.section{padding:90px 56px;border-bottom:1px solid var(--line)}
+.sec-head{display:flex;align-items:baseline;gap:24px;margin-bottom:56px}
+.sec-no{font-family:Georgia,serif;font-style:italic;font-size:15px;color:var(--red)}
+.sec-head h2{font-family:'Noto Serif SC',serif;font-weight:900;font-size:42px;letter-spacing:.06em}
+.sec-head .rule{flex:1;height:1px;background:var(--ink)}
+
+/* 关于：双栏正文 + 首字下沉 */
+.about-cols{columns:2;column-gap:64px;column-rule:1px solid var(--line);max-width:980px;font-size:15px;line-height:2.15;color:#3d3830}
+.about-cols p{margin-bottom:1.4em}
+.about-cols p:first-child::first-letter{font-family:'Noto Serif SC',serif;font-weight:900;font-size:64px;float:left;line-height:.85;margin:6px 12px 0 0;color:var(--red)}
+.pullquote{font-family:'Noto Serif SC',serif;font-weight:600;font-size:24px;line-height:1.7;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);padding:20px 4px;margin:8px 0 1.4em;break-inside:avoid}
+.traits{margin-top:48px;display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--ink);max-width:980px}
+.trait{padding:12px 26px;border-right:1px solid var(--ink);font-size:13px;letter-spacing:.08em}
+.trait:last-child{border-right:none}
+
+/* 音乐：曲目单 */
+.tracklist{max-width:760px}
+.track{display:grid;grid-template-columns:60px 1fr auto;align-items:baseline;padding:20px 4px;border-bottom:1px solid var(--line);transition:background .2s;cursor:pointer}
+.track:hover{background:#efe9de}
+.track-no{font-family:Georgia,serif;font-style:italic;color:var(--red);font-size:14px}
+.track-name{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:600;letter-spacing:.04em}
+.track-name span{font-family:Georgia,serif;font-weight:400;font-style:italic;font-size:13px;color:var(--ink-2);margin-left:14px;letter-spacing:.06em}
+.track-dur{font-size:12px;color:var(--ink-2);letter-spacing:.1em}
+.music-note{margin-top:28px;font-size:13px;color:var(--ink-2);font-style:italic;font-family:Georgia,serif}
+
+/* 摄影：杂志拼版 */
+.gallery-title{font-family:'Noto Serif SC',serif;font-weight:600;font-size:22px;margin:48px 0 20px;display:flex;align-items:center;gap:14px}
+.gallery-title::after{content:'';width:48px;height:2px;background:var(--red)}
+.mag-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.mag-grid figure{position:relative;overflow:hidden;margin:0}
+.mag-grid img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.92);transition:transform .6s}
+.mag-grid figure:hover img{transform:scale(1.03)}
+.mag-grid figcaption{position:absolute;left:0;bottom:0;background:var(--paper);padding:6px 14px 6px 0;font-size:11px;letter-spacing:.12em;color:var(--ink)}
+.g1{grid-column:span 7;aspect-ratio:3/2}
+.g2{grid-column:span 5;aspect-ratio:4/3.42}
+.g3{grid-column:span 4;aspect-ratio:1/1}
+.g4{grid-column:span 4;aspect-ratio:1/1}
+.g5{grid-column:span 4;aspect-ratio:1/1}
+
+/* 页脚 */
+.footer{padding:70px 56px;display:flex;justify-content:space-between;align-items:baseline}
+.foot-name{font-family:'Noto Serif SC',serif;font-weight:900;font-size:30px}
+.foot-email{font-size:14px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink)}
+.foot-copy{font-size:11px;color:var(--ink-2);letter-spacing:.14em}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">宋润芃</div>
+  <ul class="nav-links">
+    <li><a href="#about">关于</a></li>
+    <li><a href="#music">音乐</a></li>
+    <li><a href="#photos">摄影</a></li>
+    <li><a href="#contact">联系</a></li>
+  </ul>
+  <div class="nav-issue">VOL. 2026 / 06</div>
+</nav>
+
+<header class="hero">
+  <div class="hero-kicker">PRODUCT · MUSIC · PHOTOGRAPHY</div>
+  <h1>宋润芃<span class="en">Song Runpeng</span></h1>
+  <div class="hero-deck">
+    <p>用<strong>产品思维</strong>理解世界，用<strong>镜头和音符</strong>感受生活。喜欢复杂系统，也迷恋细节之美。</p>
+    <div class="hero-meta">
+      <div><b>5+</b>年产品经验</div>
+      <div><b>∞</b>张值得拍的照片</div>
+      <div><b>1</b>首最爱的歌</div>
+    </div>
+  </div>
+</header>
+
+<section class="section" id="about">
+  <div class="sec-head"><span class="sec-no">No.01</span><h2>关于我</h2><span class="rule"></span></div>
+  <div class="about-cols">
+    <p>我是一名产品经理，习惯用系统性思维拆解问题，但同时也相信直觉和美感的力量。</p>
+    <div class="pullquote">"音乐给了我另一种语言——不需要逻辑就能传达情绪的那种。"</div>
+    <p>摄影则让我学会慢下来，在日常里寻找值得被记住的瞬间。无论是清晨的城市天际线，还是林间一只回望的鸟，都是生活给认真观察的人的回礼。</p>
+  </div>
+  <div class="traits">
+    <span class="trait">用户思维</span><span class="trait">数据驱动</span><span class="trait">独立音乐</span><span class="trait">街头摄影</span><span class="trait">极简主义</span><span class="trait">深夜咖啡</span>
+  </div>
+</section>
+
+<section class="section" id="music">
+  <div class="sec-head"><span class="sec-no">No.02</span><h2>音乐</h2><span class="rule"></span></div>
+  <div class="tracklist">
+    <div class="track"><span class="track-no">01</span><span class="track-name">人声 <span>Vocals</span></span><span class="track-dur">04:34</span></div>
+    <div class="track"><span class="track-no">02</span><span class="track-name">鼓 <span>Drums</span></span><span class="track-dur">04:34</span></div>
+    <div class="track"><span class="track-no">03</span><span class="track-name">贝斯 <span>Bass</span></span><span class="track-dur">04:34</span></div>
+    <div class="track"><span class="track-no">04</span><span class="track-name">吉他 <span>Guitar</span></span><span class="track-dur">04:34</span></div>
+    <div class="track"><span class="track-no">05</span><span class="track-name">钢琴 <span>Piano</span></span><span class="track-dur">04:34</span></div>
+  </div>
+  <p class="music-note">— 一首歌拆开听，每条音轨都是一个故事。（正式版保留可交互的分轨播放器）</p>
+</section>
+
+<section class="section" id="photos">
+  <div class="sec-head"><span class="sec-no">No.03</span><h2>摄影</h2><span class="rule"></span></div>
+
+  <h3 class="gallery-title">我眼中的上海</h3>
+  <div class="mag-grid">
+    <figure class="g1"><img src="../public/photos/skyline.jpg" alt=""><figcaption>蓝调时刻</figcaption></figure>
+    <figure class="g2"><img src="../public/photos/sunrise.jpg" alt=""><figcaption>破晓</figcaption></figure>
+    <figure class="g3"><img src="../public/photos/dusk.jpg" alt=""><figcaption>都市天际</figcaption></figure>
+    <figure class="g4"><img src="../public/photos/rooftop.jpg" alt=""><figcaption>天台</figcaption></figure>
+    <figure class="g5"><img src="../public/photos/cityfilm.jpg" alt=""><figcaption>街角胶片</figcaption></figure>
+  </div>
+
+  <h3 class="gallery-title">自然</h3>
+  <div class="mag-grid">
+    <figure class="g1"><img src="../public/photos/forest.jpg" alt=""><figcaption>晨林</figcaption></figure>
+    <figure class="g2"><img src="../public/photos/pitta.jpg" alt=""><figcaption>仙八色鸫</figcaption></figure>
+    <figure class="g3"><img src="../public/photos/hoopoe.jpg" alt=""><figcaption>戴胜</figcaption></figure>
+    <figure class="g4"><img src="../public/photos/owl.jpg" alt=""><figcaption>领角鸮</figcaption></figure>
+    <figure class="g5"><img src="../public/photos/heron.jpg" alt=""><figcaption>夜鹭</figcaption></figure>
+  </div>
+</section>
+
+<footer class="footer" id="contact">
+  <div class="foot-name">宋润芃</div>
+  <a class="foot-email" href="mailto:BonnyKanegdo@engineer.com">BonnyKanegdo@engineer.com</a>
+  <div class="foot-copy">© 2026 · SHANGHAI</div>
+</footer>
+
+</body>
+</html>
