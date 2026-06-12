@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案 D · 柔和渐变风</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fbfaf8; --ink:#22212b; --sub:#73717f;
+  --vio:#8b7cf6; --pch:#f6a48b; --mnt:#7cd4c0;
+  --card:rgba(255,255,255,.72); --bd:rgba(34,33,43,.08);
+}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans SC','Inter','Microsoft YaHei',sans-serif;line-height:1.7;overflow-x:hidden}
+
+/* 背景光斑 */
+.blob{position:fixed;border-radius:50%;filter:blur(110px);z-index:-1;opacity:.5}
+.blob1{width:560px;height:560px;background:#d9d2ff;top:-160px;right:-120px}
+.blob2{width:480px;height:480px;background:#ffe3d6;top:48%;left:-180px}
+.blob3{width:420px;height:420px;background:#d2f3ea;bottom:-140px;right:10%}
+
+/* 导航 */
+.nav{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:100;
+  display:flex;align-items:center;gap:30px;padding:12px 28px;border-radius:999px;
+  background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--bd);
+  box-shadow:0 8px 30px rgba(34,33,43,.07)}
+.nav-logo{font-weight:700;font-size:15px;text-decoration:none;color:var(--ink)}
+.nav a{color:var(--sub);text-decoration:none;font-size:13px}
+.nav a:hover{color:var(--ink)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:120px 24px 80px}
+.hero-chip{font-size:12px;letter-spacing:.08em;color:var(--vio);background:rgba(139,124,246,.1);border:1px solid rgba(139,124,246,.25);padding:7px 18px;border-radius:999px;margin-bottom:30px}
+.hero h1{font-weight:700;font-size:clamp(52px,8vw,96px);line-height:1.12;letter-spacing:.02em}
+.hero h1 .grad{background:linear-gradient(100deg,var(--vio),var(--pch) 55%,var(--mnt));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1 .en{display:block;font-family:'Inter',sans-serif;font-weight:300;font-size:.3em;color:var(--sub);letter-spacing:.3em;margin-top:16px}
+.hero p{margin-top:30px;max-width:440px;color:var(--sub);font-size:15px;line-height:2}
+.hero-pills{display:flex;gap:12px;margin-top:36px}
+.pill{font-size:13px;padding:9px 22px;border-radius:999px;background:#fff;border:1px solid var(--bd);box-shadow:0 4px 16px rgba(34,33,43,.05)}
+
+/* 区块 */
+.section{max-width:1080px;margin:0 auto;padding:90px 24px}
+.sec-tag{display:inline-block;font-size:12px;letter-spacing:.1em;color:var(--sub);background:#fff;border:1px solid var(--bd);padding:6px 16px;border-radius:999px;margin-bottom:18px}
+.sec-h{font-weight:700;font-size:36px;margin-bottom:44px}
+.sec-h em{font-style:normal;background:linear-gradient(100deg,var(--vio),var(--pch));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* 关于：卡片 */
+.cards{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+.card{background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--bd);border-radius:24px;padding:36px;box-shadow:0 10px 40px rgba(34,33,43,.06)}
+.card p{color:var(--sub);font-size:14px;line-height:2.1;margin-bottom:12px}
+.card p b{color:var(--ink);font-weight:500}
+.traits{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.trait{font-size:12px;padding:7px 16px;border-radius:999px;background:rgba(139,124,246,.08);color:#6a5ce0}
+.trait:nth-child(2n){background:rgba(246,164,139,.12);color:#d9745a}
+.trait:nth-child(3n){background:rgba(124,212,192,.14);color:#2fa78d}
+.stats{display:grid;gap:20px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:24px;padding:26px 30px;box-shadow:0 10px 40px rgba(34,33,43,.06)}
+.stat b{display:block;font-family:'Inter',sans-serif;font-weight:800;font-size:40px;background:linear-gradient(100deg,var(--vio),var(--pch));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{font-size:12px;color:var(--sub);letter-spacing:.06em}
+
+/* 音乐：胶囊轨道 */
+.mixer{display:grid;gap:14px;max-width:720px}
+.mtrack{display:flex;align-items:center;gap:18px;background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:14px 24px;box-shadow:0 8px 30px rgba(34,33,43,.05);cursor:pointer;transition:transform .2s}
+.mtrack:hover{transform:translateX(6px)}
+.m-play{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+.mtrack:nth-child(1) .m-play{background:linear-gradient(135deg,#8b7cf6,#b39df8)}
+.mtrack:nth-child(2) .m-play{background:linear-gradient(135deg,#f6a48b,#f8c3a8)}
+.mtrack:nth-child(3) .m-play{background:linear-gradient(135deg,#7cd4c0,#a8e6d4)}
+.mtrack:nth-child(4) .m-play{background:linear-gradient(135deg,#f0b86c,#f6d49a)}
+.mtrack:nth-child(5) .m-play{background:linear-gradient(135deg,#80aef8,#abc8fa)}
+.m-name{font-size:14px;font-weight:500;width:90px}
+.m-wave{flex:1;display:flex;align-items:center;gap:3px;height:26px}
+.m-wave i{flex:1;background:rgba(34,33,43,.14);border-radius:2px}
+.m-dur{font-family:'Inter',sans-serif;font-size:12px;color:var(--sub)}
+.music-note{font-size:12px;color:var(--sub);margin-top:20px}
+
+/* 摄影：圆角瀑布 */
+.ph-title{font-size:18px;font-weight:500;margin:36px 0 18px}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.ph{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/3;box-shadow:0 12px 36px rgba(34,33,43,.1)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+.ph:hover img{transform:scale(1.05)}
+.ph figcaption{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);font-size:11px;padding:5px 14px;border-radius:999px;letter-spacing:.05em}
+
+/* 页脚 */
+.footer{max-width:1080px;margin:0 auto;padding:40px 24px 70px}
+.foot-card{background:linear-gradient(120deg,#8b7cf6,#f6a48b 60%,#7cd4c0);border-radius:28px;padding:56px;text-align:center;color:#fff}
+.foot-card h3{font-size:30px;font-weight:700;margin-bottom:10px}
+.foot-card a{display:inline-block;margin-top:18px;background:#fff;color:var(--ink);text-decoration:none;font-size:14px;font-weight:500;padding:12px 30px;border-radius:999px}
+.foot-copy{text-align:center;font-size:12px;color:var(--sub);margin-top:28px}
+</style>
+</head>
+<body>
+<div class="blob blob1"></div><div class="blob blob2"></div><div class="blob blob3"></div>
+
+<nav class="nav">
+  <a class="nav-logo" href="#">宋润芃</a>
+  <a href="#about">关于</a><a href="#music">音乐</a><a href="#photos">摄影</a><a href="#contact">联系</a>
+</nav>
+
+<header class="hero">
+  <div class="hero-chip">产品经理 · 音乐 · 摄影</div>
+  <h1>你好，我是<span class="grad">宋润芃</span><span class="en">SONG RUNPENG</span></h1>
+  <p>用产品思维理解世界，用镜头和音符感受生活。喜欢复杂系统，也迷恋细节之美。</p>
+  <div class="hero-pills"><span class="pill">🧭 产品经理</span><span class="pill">🎧 音乐爱好者</span><span class="pill">📷 摄影师</span></div>
+</header>
+
+<section class="section" id="about">
+  <span class="sec-tag">关于我</span>
+  <h2 class="sec-h">思考者，也是<em>感受者</em></h2>
+  <div class="cards">
+    <div class="card">
+      <p>我是一名<b>产品经理</b>，习惯用系统性思维拆解问题，但同时也相信直觉和美感的力量。</p>
+      <p><b>音乐</b>给了我另一种语言——不需要逻辑就能传达情绪的那种。<b>摄影</b>则让我学会慢下来，在日常里寻找值得被记住的瞬间。</p>
+      <div class="traits">
+        <span class="trait">用户思维</span><span class="trait">数据驱动</span><span class="trait">独立音乐</span><span class="trait">街头摄影</span><span class="trait">极简主义</span><span class="trait">深夜咖啡</span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>5+</b><span>年产品经验</span></div>
+      <div class="stat"><b>∞</b><span>张值得拍的照片</span></div>
+      <div class="stat"><b>1</b><span>首最爱的歌</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="music">
+  <span class="sec-tag">音乐</span>
+  <h2 class="sec-h">一首歌，<em>拆开听</em></h2>
+  <div class="mixer">
+    <div class="mtrack"><span class="m-play">▶</span><span class="m-name">人声</span><span class="m-wave"><i style="height:30%"></i><i style="height:70%"></i><i style="height:45%"></i><i style="height:90%"></i><i style="height:60%"></i><i style="height:35%"></i><i style="height:80%"></i><i style="height:50%"></i><i style="height:65%"></i><i style="height:40%"></i><i style="height:75%"></i><i style="height:55%"></i></span><span class="m-dur">04:34</span></div>
+    <div class="mtrack"><span class="m-play">▶</span><span class="m-name">鼓</span><span class="m-wave"><i style="height:80%"></i><i style="height:40%"></i><i style="height:85%"></i><i style="height:45%"></i><i style="height:90%"></i><i style="height:38%"></i><i style="height:82%"></i><i style="height:42%"></i><i style="height:88%"></i><i style="height:46%"></i><i style="height:84%"></i><i style="height:40%"></i></span><span class="m-dur">04:34</span></div>
+    <div class="mtrack"><span class="m-play">▶</span><span class="m-name">贝斯</span><span class="m-wave"><i style="height:50%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:60%"></i><i style="height:52%"></i><i style="height:58%"></i><i style="height:50%"></i><i style="height:62%"></i><i style="height:54%"></i><i style="height:56%"></i><i style="height:50%"></i><i style="height:58%"></i></span><span class="m-dur">04:34</span></div>
+    <div class="mtrack"><span class="m-play">▶</span><span class="m-name">吉他</span><span class="m-wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:55%"></i><i style="height:75%"></i><i style="height:45%"></i><i style="height:68%"></i><i style="height:52%"></i><i style="height:72%"></i><i style="height:48%"></i><i style="height:66%"></i><i style="height:58%"></i><i style="height:44%"></i></span><span class="m-dur">04:34</span></div>
+    <div class="mtrack"><span class="m-play">▶</span><span class="m-name">钢琴</span><span class="m-wave"><i style="height:35%"></i><i style="height:60%"></i><i style="height:42%"></i><i style="height:65%"></i><i style="height:38%"></i><i style="height:58%"></i><i style="height:45%"></i><i style="height:62%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:36%"></i></span><span class="m-dur">04:34</span></div>
+  </div>
+  <p class="music-note">正式版保留可交互的分轨播放器（静音 / 独奏 / 音量）</p>
+</section>
+
+<section class="section" id="photos">
+  <span class="sec-tag">摄影</span>
+  <h2 class="sec-h">被记住的<em>瞬间</em></h2>
+  <div class="ph-title">我眼中的上海</div>
+  <div class="ph-grid">
+    <figure class="ph"><img src="../public/photos/sunrise.jpg" alt=""><figcaption>破晓</figcaption></figure>
+    <figure class="ph"><img src="../public/photos/skyline.jpg" alt=""><figcaption>蓝调时刻</figcaption></figure>
+    <figure class="ph"><img src="../public/photos/dusk.jpg" alt=""><figcaption>都市天际</figcaption></figure>
+  </div>
+  <div class="ph-title">自然</div>
+  <div class="ph-grid">
+    <figure class="ph"><img src="../public/photos/forest.jpg" alt=""><figcaption>晨林</figcaption></figure>
+    <figure class="ph"><img src="../public/photos/pitta.jpg" alt=""><figcaption>仙八色鸫</figcaption></figure>
+    <figure class="ph"><img src="../public/photos/owl.jpg" alt=""><figcaption>领角鸮</figcaption></figure>
+  </div>
+</section>
+
+<footer class="footer" id="contact">
+  <div class="foot-card">
+    <h3>来聊聊吧 👋</h3>
+    <div>产品、音乐、摄影，或者任何有意思的事</div>
+    <a href="mailto:BonnyKanegdo@engineer.com">BonnyKanegdo@engineer.com</a>
+  </div>
+  <div class="foot-copy">© 2026 宋润芃</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案 C · 暗房胶片风</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Inter:wght@300;400&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0b09; --bg-2:#16120e; --line:#2c2520;
+  --t1:#e8ddcd; --t2:#8d7f6c; --t3:#4f4639;
+  --amber:#e0a458;
+}
+body{background:var(--bg);color:var(--t1);font-family:'Inter','Microsoft YaHei',sans-serif;font-weight:300;line-height:1.7}
+/* 颗粒 */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.type{font-family:'Special Elite','Courier New',monospace}
+.serif{font-family:'Noto Serif SC','SimSun',serif}
+
+/* 导航 */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:22px 44px;background:linear-gradient(rgba(13,11,9,.9),transparent)}
+.nav-logo{font-family:'Noto Serif SC',serif;font-size:18px;color:var(--t1);text-decoration:none;letter-spacing:.06em}
+.nav-links{display:flex;gap:34px;list-style:none}
+.nav-links a{color:var(--t2);text-decoration:none;font-size:12px;letter-spacing:.14em}
+.nav-links a:hover{color:var(--amber)}
+
+/* HERO：整页照片打底 */
+.hero{height:100vh;position:relative;display:flex;align-items:flex-end;overflow:hidden}
+.hero-bg{position:absolute;inset:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;filter:sepia(.25) contrast(1.05) brightness(.55)}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 30%,var(--bg) 96%)}
+.hero-inner{position:relative;z-index:2;padding:0 44px 90px;width:100%}
+.hero-stamp{font-family:'Special Elite',monospace;font-size:12px;color:var(--amber);letter-spacing:.3em;margin-bottom:22px}
+.hero h1{font-family:'Noto Serif SC','SimSun',serif;font-weight:600;font-size:clamp(54px,8.5vw,110px);line-height:1.08;letter-spacing:.05em}
+.hero h1 em{display:block;font-family:'Special Elite',monospace;font-style:normal;font-size:.22em;color:var(--t2);letter-spacing:.4em;margin-top:18px}
+.hero p{margin-top:30px;max-width:380px;color:var(--t2);font-size:14px;line-height:2.1}
+
+/* 区块 */
+.section{padding:110px 44px;border-top:1px solid var(--line)}
+.sec-label{font-family:'Special Elite',monospace;font-size:12px;color:var(--amber);letter-spacing:.3em;margin-bottom:52px}
+
+/* 关于 */
+.about{display:grid;grid-template-columns:1.2fr 1fr;gap:70px;align-items:center}
+.about h2{font-family:'Noto Serif SC',serif;font-weight:600;font-size:40px;line-height:1.3;margin-bottom:26px}
+.about h2 em{color:var(--amber);font-style:normal}
+.about p{color:var(--t2);font-size:14px;line-height:2.1;margin-bottom:14px}
+.traits{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.trait{font-family:'Special Elite',monospace;font-size:11px;color:var(--t2);border:1px dashed var(--t3);padding:6px 14px;letter-spacing:.08em}
+/* 宝丽来卡片堆 */
+.polaroids{position:relative;height:420px}
+.pol{position:absolute;background:#f4ead8;padding:12px 12px 44px;box-shadow:0 14px 40px rgba(0,0,0,.55);transition:transform .4s}
+.pol img{display:block;width:240px;height:240px;object-fit:cover;filter:sepia(.18) contrast(1.02)}
+.pol span{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-family:'Special Elite',monospace;font-size:12px;color:#5a4c38}
+.pol:nth-child(1){top:10px;left:8%;transform:rotate(-6deg)}
+.pol:nth-child(2){top:60px;left:38%;transform:rotate(4deg)}
+.pol:nth-child(1):hover,.pol:nth-child(2):hover{transform:rotate(0) scale(1.04);z-index:3}
+
+/* 音乐：磁带 */
+.tape{max-width:680px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:34px 38px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.tape-top{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed var(--t3);padding-bottom:16px;margin-bottom:22px}
+.tape-title{font-family:'Special Elite',monospace;font-size:16px;letter-spacing:.16em}
+.tape-side{font-family:'Special Elite',monospace;font-size:11px;color:var(--amber)}
+.stem{display:flex;align-items:center;gap:18px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.stem:last-of-type{border-bottom:none}
+.stem:hover .stem-name{color:var(--amber)}
+.stem-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);opacity:.5;flex-shrink:0}
+.stem-name{font-size:14px;letter-spacing:.06em;flex:1;transition:color .2s}
+.stem-name span{font-family:'Special Elite',monospace;font-size:11px;color:var(--t3);margin-left:12px;letter-spacing:.18em}
+.stem-dur{font-family:'Special Elite',monospace;font-size:11px;color:var(--t3)}
+.music-note{font-family:'Special Elite',monospace;font-size:11px;color:var(--t3);margin-top:22px;letter-spacing:.1em}
+
+/* 摄影：接触印样 */
+.contact-sheet{margin-top:8px}
+.sheet-title{font-family:'Special Elite',monospace;font-size:13px;color:var(--t2);letter-spacing:.2em;margin:44px 0 18px}
+.sheet{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:26px;background:var(--bg-2);border:1px solid var(--line)}
+.neg{position:relative;border:6px solid #060504;outline:1px solid var(--line);aspect-ratio:3/2;overflow:hidden;cursor:pointer}
+.neg img{width:100%;height:100%;object-fit:cover;filter:sepia(.2) contrast(1.04) brightness(.92);transition:filter .3s,transform .5s}
+.neg:hover img{filter:none;transform:scale(1.04)}
+.neg::after{content:attr(data-no);position:absolute;top:-2px;right:4px;font-family:'Special Elite',monospace;font-size:9px;color:var(--amber);opacity:.9}
+.neg figcaption{position:absolute;bottom:0;left:0;right:0;background:rgba(6,5,4,.78);font-family:'Special Elite',monospace;font-size:10px;color:var(--t2);padding:5px 8px;letter-spacing:.14em;opacity:0;transition:opacity .25s}
+.neg:hover figcaption{opacity:1}
+
+/* 页脚 */
+.footer{padding:70px 44px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+.foot-name{font-family:'Noto Serif SC',serif;font-size:24px}
+.foot-email{color:var(--t2);text-decoration:none;font-size:13px;border-bottom:1px dashed var(--t3);padding-bottom:2px}
+.foot-email:hover{color:var(--amber)}
+.foot-copy{font-family:'Special Elite',monospace;font-size:11px;color:var(--t3);letter-spacing:.2em}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-logo" href="#">宋润芃</a>
+  <ul class="nav-links">
+    <li><a href="#about">关于</a></li>
+    <li><a href="#music">音乐</a></li>
+    <li><a href="#photos">摄影</a></li>
+    <li><a href="#contact">联系</a></li>
+  </ul>
+</nav>
+
+<header class="hero">
+  <div class="hero-bg"><img src="../public/photos/dusk.jpg" alt=""></div>
+  <div class="hero-inner">
+    <div class="hero-stamp">EST. SHANGHAI — FILM &amp; SOUND</div>
+    <h1>宋润芃<em>SONG RUNPENG</em></h1>
+    <p>用产品思维理解世界，用镜头和音符感受生活。喜欢复杂系统，也迷恋细节之美。</p>
+  </div>
+</header>
+
+<section class="section" id="about">
+  <div class="sec-label">01 / 关于我</div>
+  <div class="about">
+    <div>
+      <h2>思考者，<br>也是<em>感受者</em></h2>
+      <p>我是一名产品经理，习惯用系统性思维拆解问题，但同时也相信直觉和美感的力量。</p>
+      <p>音乐给了我另一种语言——不需要逻辑就能传达情绪的那种。摄影则让我学会慢下来，在日常里寻找值得被记住的瞬间。</p>
+      <div class="traits">
+        <span class="trait">用户思维</span><span class="trait">数据驱动</span><span class="trait">独立音乐</span><span class="trait">街头摄影</span><span class="trait">极简主义</span><span class="trait">深夜咖啡</span>
+      </div>
+    </div>
+    <div class="polaroids">
+      <div class="pol"><img src="../public/photos/ginkgo.jpg" alt=""><span>银杏 · 2026</span></div>
+      <div class="pol"><img src="../public/photos/garden.jpg" alt=""><span>园 · 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="music">
+  <div class="sec-label">02 / 音乐</div>
+  <div class="tape">
+    <div class="tape-top">
+      <span class="tape-title">MIXTAPE — STEMS</span>
+      <span class="tape-side">SIDE A · 120 BPM</span>
+    </div>
+    <div class="stem"><span class="stem-dot"></span><span class="stem-name">人声<span>VOCALS</span></span><span class="stem-dur">04:34</span></div>
+    <div class="stem"><span class="stem-dot"></span><span class="stem-name">鼓<span>DRUMS</span></span><span class="stem-dur">04:34</span></div>
+    <div class="stem"><span class="stem-dot"></span><span class="stem-name">贝斯<span>BASS</span></span><span class="stem-dur">04:34</span></div>
+    <div class="stem"><span class="stem-dot"></span><span class="stem-name">吉他<span>GUITAR</span></span><span class="stem-dur">04:34</span></div>
+    <div class="stem"><span class="stem-dot"></span><span class="stem-name">钢琴<span>PIANO</span></span><span class="stem-dur">04:34</span></div>
+  </div>
+  <p class="music-note">* 正式版保留可交互的分轨播放器（静音 / 独奏 / 音量）</p>
+</section>
+
+<section class="section" id="photos">
+  <div class="sec-label">03 / 摄影</div>
+
+  <div class="contact-sheet">
+    <div class="sheet-title">ROLL 01 — 我眼中的上海</div>
+    <div class="sheet">
+      <figure class="neg" data-no="01A"><img src="../public/photos/sunrise.jpg" alt=""><figcaption>破晓</figcaption></figure>
+      <figure class="neg" data-no="02A"><img src="../public/photos/skyline.jpg" alt=""><figcaption>蓝调时刻</figcaption></figure>
+      <figure class="neg" data-no="03A"><img src="../public/photos/rooftop.jpg" alt=""><figcaption>天台</figcaption></figure>
+      <figure class="neg" data-no="04A"><img src="../public/photos/cityfilm.jpg" alt=""><figcaption>街角胶片</figcaption></figure>
+    </div>
+    <div class="sheet-title">ROLL 02 — 自然</div>
+    <div class="sheet">
+      <figure class="neg" data-no="05A"><img src="../public/photos/forest.jpg" alt=""><figcaption>晨林</figcaption></figure>
+      <figure class="neg" data-no="06A"><img src="../public/photos/pitta.jpg" alt=""><figcaption>仙八色鸫</figcaption></figure>
+      <figure class="neg" data-no="07A"><img src="../public/photos/owl.jpg" alt=""><figcaption>领角鸮</figcaption></figure>
+      <figure class="neg" data-no="08A"><img src="../public/photos/heron.jpg" alt=""><figcaption>夜鹭</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" id="contact">
+  <div class="foot-name">宋润芃</div>
+  <a class="foot-email" href="mailto:BonnyKanegdo@engineer.com">BonnyKanegdo@engineer.com</a>
+  <div class="foot-copy">© 2026 / DEVELOPED &amp; PRINTED</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案 B · 瑞士网格风</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--w:#ffffff;--k:#111111;--g:#888888;--line:#111111;--accent:#ff3b00}
+body{background:var(--w);color:var(--k);font-family:'Inter','Microsoft YaHei',Helvetica,sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',Consolas,monospace}
+
+/* 网格外框 */
+.frame{border:2px solid var(--line);margin:20px;min-height:calc(100vh - 40px)}
+
+/* 顶栏 */
+.nav{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:2px solid var(--line)}
+.nav>div{padding:16px 20px;border-right:2px solid var(--line);font-size:12px;letter-spacing:.06em}
+.nav>div:last-child{border-right:none}
+.nav a{color:var(--k);text-decoration:none}
+.nav a:hover{color:var(--accent)}
+.nav .logo{font-weight:900;font-size:14px}
+
+/* HERO */
+.hero{display:grid;grid-template-columns:2fr 1fr;border-bottom:2px solid var(--line)}
+.hero-main{padding:70px 40px 60px;border-right:2px solid var(--line)}
+.hero-main h1{font-weight:900;font-size:clamp(58px,9vw,128px);line-height:.95;letter-spacing:-.03em;text-transform:uppercase}
+.hero-main h1 .cn{display:block;font-size:.62em;letter-spacing:.1em;margin-bottom:8px}
+.hero-main p{margin-top:44px;max-width:380px;font-size:14px;line-height:1.9;color:#444}
+.hero-side{display:flex;flex-direction:column}
+.hero-cell{flex:1;padding:20px;border-bottom:2px solid var(--line);display:flex;flex-direction:column;justify-content:space-between}
+.hero-cell:last-child{border-bottom:none}
+.hero-cell .idx{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--g)}
+.hero-cell .lbl{font-weight:700;font-size:18px}
+.hero-cell.acc{background:var(--accent);color:#fff}
+.hero-cell.acc .idx{color:rgba(255,255,255,.7)}
+
+/* 段落区 */
+.section{border-bottom:2px solid var(--line);display:grid;grid-template-columns:280px 1fr}
+.sec-side{padding:32px 20px;border-right:2px solid var(--line)}
+.sec-side .no{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);margin-bottom:10px}
+.sec-side h2{font-weight:900;font-size:30px;letter-spacing:.04em}
+.sec-body{padding:56px 48px}
+
+/* 关于 */
+.about-lede{font-size:24px;font-weight:700;line-height:1.6;max-width:640px;margin-bottom:32px}
+.about-lede em{font-style:normal;color:var(--accent)}
+.sec-body>p{font-size:14px;color:#444;line-height:2;max-width:560px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border:2px solid var(--line);margin-top:44px;max-width:640px}
+.stat{padding:24px;border-right:2px solid var(--line)}
+.stat:last-child{border-right:none}
+.stat b{display:block;font-weight:900;font-size:44px;line-height:1}
+.stat span{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--g);letter-spacing:.06em}
+.traits{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.trait{font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid var(--k);padding:5px 12px}
+.trait:hover{background:var(--k);color:#fff}
+
+/* 音乐：通道表 */
+.chan{display:grid;grid-template-columns:48px 110px 1fr 70px;align-items:center;border:2px solid var(--line);border-bottom:none;max-width:760px}
+.chan:last-of-type{border-bottom:2px solid var(--line)}
+.chan>div{padding:14px 16px;border-right:2px solid var(--line);font-size:13px}
+.chan>div:last-child{border-right:none}
+.chan .id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--g)}
+.chan .nm{font-weight:700}
+.chan .bar{height:8px;background:repeating-linear-gradient(90deg,var(--k) 0 6px,transparent 6px 10px)}
+.chan:hover{background:#f4f4f4;cursor:pointer}
+.chan .dur{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:right;color:var(--g)}
+.music-note{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--g);margin-top:20px}
+
+/* 摄影 */
+.ph-group{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.06em;margin:40px 0 14px}
+.ph-group:first-of-type{margin-top:0}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:2px solid var(--line)}
+.ph{position:relative;aspect-ratio:4/3;overflow:hidden;border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
+.ph:nth-child(3n){border-right:none}
+.ph:nth-last-child(-n+3){border-bottom:none}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+.ph:hover img{transform:scale(1.04)}
+.ph figcaption{position:absolute;top:0;left:0;background:var(--k);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 10px;letter-spacing:.08em}
+
+/* 页脚 */
+.footer{display:grid;grid-template-columns:1fr 1fr 1fr}
+.footer>div{padding:28px 20px;border-right:2px solid var(--line);font-size:13px}
+.footer>div:last-child{border-right:none}
+.footer b{font-weight:900;font-size:16px}
+.footer a{color:var(--k)}
+.footer .mono{font-size:11px;color:var(--g)}
+</style>
+</head>
+<body>
+<div class="frame">
+
+<nav class="nav">
+  <div class="logo">宋润芃 — SONG RUNPENG</div>
+  <div><a href="#about">01 / 关于</a></div>
+  <div><a href="#music">02 / 音乐</a> &nbsp; <a href="#photos">03 / 摄影</a></div>
+  <div class="mono">2026.06 / SHANGHAI</div>
+</nav>
+
+<header class="hero">
+  <div class="hero-main">
+    <h1><span class="cn">宋润芃</span>SONG<br>RUNPENG</h1>
+    <p>用产品思维理解世界，用镜头和音符感受生活。喜欢复杂系统，也迷恋细节之美。</p>
+  </div>
+  <div class="hero-side">
+    <div class="hero-cell"><span class="idx">A.</span><span class="lbl">产品经理</span></div>
+    <div class="hero-cell acc"><span class="idx">B.</span><span class="lbl">音乐爱好者</span></div>
+    <div class="hero-cell"><span class="idx">C.</span><span class="lbl">摄影师</span></div>
+  </div>
+</header>
+
+<section class="section" id="about">
+  <div class="sec-side"><div class="no">01</div><h2>关于我</h2></div>
+  <div class="sec-body">
+    <p class="about-lede">思考者，也是<em>感受者</em>。</p>
+    <p>我是一名产品经理，习惯用系统性思维拆解问题，但同时也相信直觉和美感的力量。</p>
+    <p>音乐给了我另一种语言——不需要逻辑就能传达情绪的那种。摄影则让我学会慢下来，在日常里寻找值得被记住的瞬间。</p>
+    <div class="stats">
+      <div class="stat"><b>5+</b><span>YEARS / 产品经验</span></div>
+      <div class="stat"><b>∞</b><span>PHOTOS / 值得拍</span></div>
+      <div class="stat"><b>1</b><span>SONG / 最爱</span></div>
+    </div>
+    <div class="traits">
+      <span class="trait">用户思维</span><span class="trait">数据驱动</span><span class="trait">独立音乐</span><span class="trait">街头摄影</span><span class="trait">极简主义</span><span class="trait">深夜咖啡</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="music">
+  <div class="sec-side"><div class="no">02</div><h2>音乐</h2></div>
+  <div class="sec-body">
+    <div class="chan"><div class="id">CH1</div><div class="nm">人声</div><div><div class="bar"></div></div><div class="dur">04:34</div></div>
+    <div class="chan"><div class="id">CH2</div><div class="nm">鼓</div><div><div class="bar"></div></div><div class="dur">04:34</div></div>
+    <div class="chan"><div class="id">CH3</div><div class="nm">贝斯</div><div><div class="bar"></div></div><div class="dur">04:34</div></div>
+    <div class="chan"><div class="id">CH4</div><div class="nm">吉他</div><div><div class="bar"></div></div><div class="dur">04:34</div></div>
+    <div class="chan"><div class="id">CH5</div><div class="nm">钢琴</div><div><div class="bar"></div></div><div class="dur">04:34</div></div>
+    <p class="music-note">// 一首歌拆成 6 条音轨 —— 正式版保留可交互的分轨播放器</p>
+  </div>
+</section>
+
+<section class="section" id="photos">
+  <div class="sec-side"><div class="no">03</div><h2>摄影</h2></div>
+  <div class="sec-body">
+    <div class="ph-group">SERIES_01 / 我眼中的上海</div>
+    <div class="ph-grid">
+      <figure class="ph"><img src="../public/photos/sunrise.jpg" alt=""><figcaption>破晓</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/skyline.jpg" alt=""><figcaption>蓝调时刻</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/dusk.jpg" alt=""><figcaption>都市天际</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/rooftop.jpg" alt=""><figcaption>天台</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/cityfilm.jpg" alt=""><figcaption>街角胶片</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/lanterns.jpg" alt=""><figcaption>灯笼</figcaption></figure>
+    </div>
+    <div class="ph-group">SERIES_02 / 自然</div>
+    <div class="ph-grid">
+      <figure class="ph"><img src="../public/photos/forest.jpg" alt=""><figcaption>晨林</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/pitta.jpg" alt=""><figcaption>仙八色鸫</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/hoopoe.jpg" alt=""><figcaption>戴胜</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/owl.jpg" alt=""><figcaption>领角鸮</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/heron.jpg" alt=""><figcaption>夜鹭</figcaption></figure>
+      <figure class="ph"><img src="../public/photos/lake.jpg" alt=""><figcaption>湖</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" id="contact">
+  <div><b>宋润芃</b></div>
+  <div><a href="mailto:BonnyKanegdo@engineer.com">BonnyKanegdo@engineer.com</a></div>
+  <div class="mono">© 2026 — ALL RIGHTS RESERVED</div>
+</footer>
+
+</div>
+</body>
+</html>

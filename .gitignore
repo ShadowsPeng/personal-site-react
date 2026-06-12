@@ -1,0 +1,36 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+
+# 照片源文件不进 git（高清大文件，真源在 F 盘，构建时本地读取）。
+# 保留目录结构与占位 txt，换电脑 clone 后把图放回各分类目录即可。
+src/gallery/**/*.jpg
+src/gallery/**/*.jpeg
+src/gallery/**/*.JPG
+src/gallery/**/*.JPEG
+src/gallery/**/*.png
+src/gallery/**/*.PNG
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
