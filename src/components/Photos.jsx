@@ -60,23 +60,18 @@ const META = [
   { id: 'man',      title: '风格',     en: 'Style',      icon: 'style' },
 ]
 
-// 从文件名衍生说明（去掉数字后缀，保留关键词）
+// 从文件名衍生说明（去掉数字后缀/前缀，保留中文关键词）
 const captionOf = (base) => {
   let s = base
-    .replace(/^[a-z\d]+[-_]/i, '')       // 去英文前缀
-    .replace(/[-_]?\d{4,}$/, '')          // 去末尾长数字
-    .replace(/[-_]?\d{2,}$/, '')          // 去末尾短数字
-    .replace(/[-_]0+(\d+)$/, '_$1')       // 去零前缀
-    .replace(/^微信.*?_/, '')             // 去"微信图片_xxx_"前缀
-    .replace(/^[A-Z]+[-_]?[A-Z\d]*[-_]?/i, '') // 去型号前缀
-    .replace(/^0+(\d+)$/, '$1')           // 去纯数字前导零
+    .replace(/^[A-Z\d]+[-_]/i, '')        // 去型号前缀 (NE2A8107_ 等)
+    .replace(/[-_]?\d{5,}$/, '')          // 去末尾长数字 (000091)
+    .replace(/[-_]?\d{3,4}$/, '')         // 去末尾短数字 (_12)
+    .replace(/^0+(\d{3,})$/, '$1')        // 去前导零
     .replace(/[_-]/g, ' ')                // 下划线→空格
+    .replace(/\s+\d{1,2}$/, '')           // 去空格+数字后缀
     .trim()
-  // 去掉纯数字后缀
-  s = s.replace(/\s+\d{1,3}$/, '')
-  // 保留后缀数字里的有意义部分（如 "119" 之类本来就有意义的文件名）
-  if (!s || /^\d+$/.test(s)) s = new URLSearchParams(location.search).get('cat') || ''
-  return s.length > 0 && s.length < 30 ? s : base.replace(/[_-]/g, ' ').replace(/\d{4,}/g,'').trim()
+  if (!s || /^\d+$/.test(s)) s = base     // 纯数字→保留原名
+  return s
 }
 
 // 扫描 src/gallery/<cat>/*.{jpg,jpeg,png}（eager → 构建期解析，丢图刷新即生效）
@@ -88,7 +83,7 @@ const GALLERY = (() => {
     const m = path.match(/gallery\/([^/]+)\/([^/]+)\.\w+$/)
     if (!m) continue
     const [, cat, base] = m
-    ;(byCat[cat] ||= []).push({ base, url: FILES[path], caption: CAPTIONS[base] || '' })
+    ;(byCat[cat] ||= []).push({ base, url: FILES[path], caption: captionOf(base) })
   }
   for (const cat in byCat) byCat[cat].sort((a, b) => a.base.localeCompare(b.base))
   return byCat
