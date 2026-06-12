@@ -284,18 +284,24 @@ body {
 }
 .member.off { filter: grayscale(.85) brightness(.55); }
 .member.off::before, .member.off::after { opacity: 0; }
-.member-icon { position: relative; filter: drop-shadow(0 0 5px var(--mc)); transition: filter .35s; }
+.member.draggable { cursor: grab; touch-action: none; }
+.member.draggable:active { cursor: grabbing; }
+/* 发光强度跟随该轨实时电平 --energy(0..1) */
+.member-icon { position: relative;
+  filter: drop-shadow(0 0 calc(3px + var(--energy, 0) * 13px) var(--mc)); }
 .member.off .member-icon { filter: none; }
+/* 站位光斑亮度也跟着电平走 */
+.member::before { opacity: calc(.14 + var(--energy, 0) * .3); }
 
-/* chibi 摆动 */
+/* chibi 摆动 —— 幅度由 --amp(0.15..1.3) 驱动，即"自己那条音轨越响，动得越大" */
 .chibi { display: block; margin: 0 auto; overflow: visible;
   animation: chibi-bob 2.8s ease-in-out infinite; transform-origin: 50% 100%; }
 .member:nth-child(odd) .chibi { animation-delay: -.7s; }
 .stage.playing .chibi { animation-duration: 1.1s; }
 .member.off .chibi { animation-play-state: paused; }
 @keyframes chibi-bob {
-  0%,100% { transform: translateY(0) rotate(-1deg); }
-  50%     { transform: translateY(-4px) rotate(1deg); }
+  0%,100% { transform: translateY(0) rotate(calc(-1deg * var(--amp, .6))); }
+  50%     { transform: translateY(calc(-4px * var(--amp, .6))) rotate(calc(1deg * var(--amp, .6))); }
 }
 /* 手臂/乐器动作：仅播放时 */
 .chibi g[class*="anim-"] { transform-box: fill-box; transform-origin: 50% 8%; }
@@ -305,10 +311,10 @@ body {
 .stage.playing .anim-keys  { animation: keys  .5s ease-in-out infinite; }
 .stage.playing .anim-keys.k2{ animation-delay: -.25s; }
 .stage.playing .anim-mic   { animation: mic 2.4s ease-in-out infinite; }
-@keyframes strum { 0%,100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
-@keyframes drum  { 0%,100% { transform: rotate(-6deg) translateY(0); } 50% { transform: rotate(8deg) translateY(2px); } }
-@keyframes keys  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(2.5px); } }
-@keyframes mic   { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes strum { 0%,100% { transform: rotate(calc(-9deg * var(--amp, .6))); } 50% { transform: rotate(calc(9deg * var(--amp, .6))); } }
+@keyframes drum  { 0%,100% { transform: rotate(calc(-6deg * var(--amp, .6))) translateY(0); } 50% { transform: rotate(calc(8deg * var(--amp, .6))) translateY(calc(2px * var(--amp, .6))); } }
+@keyframes keys  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(calc(2.5px * var(--amp, .6))); } }
+@keyframes mic   { 0%,100% { transform: rotate(calc(-3deg * var(--amp, .6))); } 50% { transform: rotate(calc(3deg * var(--amp, .6))); } }
 /* 飘音符 */
 .note { opacity: 0; }
 .stage.playing .note { animation: float-note 2.2s ease-in infinite; }
@@ -340,6 +346,27 @@ body {
   gap: 8px; margin-top: 7px; opacity: 0; transition: opacity .2s;
 }
 .member:hover .member-ctl, .member.off .member-ctl { opacity: 1; }
+
+/* ── 一键场景 ── */
+.daw-presets {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  padding: 11px 18px; background: var(--surface-h); border-top: 1px solid var(--border);
+}
+.dp-label { font-size: 10px; color: var(--text-3); letter-spacing: .12em; margin-right: 2px; }
+.dp-btn {
+  font-size: 12px; color: var(--text-2); cursor: pointer;
+  border: 1px solid var(--border); background: transparent; border-radius: 999px;
+  padding: 5px 14px; letter-spacing: .04em; transition: border-color .2s, color .2s, background .2s;
+}
+.dp-btn:hover { border-color: var(--accent); color: var(--text-1); background: rgba(212,184,150,.08); }
+
+/* ── Solo 追光：全场压暗，灯只打在被 solo 的乐手身上 ── */
+.stage.has-solo .stage-lights { opacity: .22; }
+.stage.has-solo .stage-grid   { opacity: .4; }
+.member.soloed { z-index: 4; }
+.member.soloed::before { opacity: .55; width: 210px; height: 232px; top: 12%; }
+.member.soloed::after  { opacity: .85; width: 132px; height: 22px; }
+.member.soloed .member-icon { filter: drop-shadow(0 0 20px var(--mc)) brightness(1.18); }
 .track-vol {
   width: 60px; height: 3px; appearance: none; -webkit-appearance: none;
   background: rgba(160,180,210,.22); outline: none; cursor: pointer; border-radius: 3px;

@@ -13,6 +13,14 @@ const TRACKS = [
   { id: 'other',  name: '合成器', color: '#c98bff', pos: { left: '80%', top: '34%' } },
 ]
 
+// ─── 一键场景：用乐队语言描述的混音预设(on = 在台上的声部)──
+const PRESETS = [
+  { id: 'all',    label: '全员上场', on: TRACKS.map(t => t.id) },
+  { id: 'kara',   label: '卡拉OK',  on: ['guitar', 'bass', 'drums', 'piano', 'other'] },
+  { id: 'rhythm', label: '节奏组',   on: ['drums', 'bass'] },
+  { id: 'unplug', label: '不插电',   on: ['vocals', 'guitar'] },
+]
+
 // ─── 霓虹乐手（深色 + 发光线条 + HUD 面罩，赛博舞台风）──
 const SUIT  = '#1b2230'   // 深色机体
 const STEEL = '#2c3646'   // 装甲高光
@@ -163,10 +171,15 @@ const note = (color) => (
   </g>
 )
 
+// ─── 位置 → 声像/音量 映射 ───────────────────────────
+// x(0..100%) → 立体声 pan(-1..1)；y(越靠台前/越下 → 越响)
+const panFromX = (x) => Math.max(-1, Math.min(1, (x - 50) / 50))
+const volFromY = (y) => +Math.max(0.6, Math.min(1, (y - 24) / 56 * 0.4 + 0.6)).toFixed(2)
+
 // ─── state ────────────────────────────────────────────
 const initState = () => ({
   isPlaying: false,
-  tracks: Object.fromEntries(TRACKS.map(t => [t.id, { muted: false, solo: false, volume: 1 }])),
+  tracks: Object.fromEntries(TRACKS.map(t => [t.id, { muted: false, solo: false, volume: volFromY(parseFloat(t.pos.top)) }])),
 })
 
 function reducer(state, action) {
@@ -176,6 +189,9 @@ function reducer(state, action) {
     case 'MUTE':  return { ...state, tracks: { ...state.tracks, [action.id]: { ...state.tracks[action.id], muted:  !state.tracks[action.id].muted  } } }
     case 'SOLO':  return { ...state, tracks: { ...state.tracks, [action.id]: { ...state.tracks[action.id], solo:   !state.tracks[action.id].solo   } } }
     case 'VOL':   return { ...state, tracks: { ...state.tracks, [action.id]: { ...state.tracks[action.id], volume:  action.value                   } } }
+    case 'PRESET': return { ...state, tracks: Object.fromEntries(
+      TRACKS.map(t => [t.id, { ...state.tracks[t.id], muted: !action.on.includes(t.id), solo: false }])
+    ) }
     default: return state
   }
 }
@@ -199,27 +215,46 @@ function fmt(t) {
 }
 
 // ─── 舞台成员 ─────────────────────────────────────────
-function Member({ def, st, anySolo, dispatch }) {
+function Member({ def, st, anySolo, dispatch, elRef, pos, onDragMove, draggable }) {
   const dimmed = st.muted || (anySolo && !st.solo)
   const status = st.muted ? 'OFF' : (anySolo && !st.solo) ? '——' : 'ON'
+  const drag = useRef(null)
+
+  const onDown = e => {
+    drag.current = { moved: false, sx: e.clientX, sy: e.clientY }
+    if (draggable) e.currentTarget.setPointerCapture?.(e.pointerId)
+  }
+  const onMove = e => {
+    const d = drag.current
+    if (!d || !draggable) return
+    if (!d.moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 5) return
+    d.moved = true
+    const stage = e.currentTarget.closest('.stage')
+    if (!stage) return
+    const r = stage.getBoundingClientRect()
+    const x = Math.max(8, Math.min(92, ((e.clientX - r.left) / r.width)  * 100))
+    const y = Math.max(24, Math.min(80, ((e.clientY - r.top)  / r.height) * 100))
+    onDragMove(def.id, x, y)
+  }
+  const onUp = () => {
+    const d = drag.current; drag.current = null
+    if (d && !d.moved) dispatch({ type: 'MUTE', id: def.id })   // 没拖动 = 点击 = 上/下场
+  }
 
   return (
     <div
-      className={`member${dimmed ? ' off' : ''}`}
+      ref={elRef}
+      className={`member${dimmed ? ' off' : ''}${st.solo ? ' soloed' : ''}${draggable ? ' draggable' : ''}`}
       data-role={def.id}
-      style={{ ...def.pos, '--mc': def.color }}
-      onClick={() => dispatch({ type: 'MUTE', id: def.id })}
-      title={st.muted ? '点击让 TA 上场' : '点击让 TA 休息'}
+      style={{ left: pos.x + '%', top: pos.y + '%', '--mc': def.color }}
+      onPointerDown={onDown}
+      onPointerMove={onMove}
+      onPointerUp={onUp}
+      title={draggable ? '拖动换位（左右=声像，前后=音量）· 点击让 TA 上下场' : (st.muted ? '点击让 TA 上场' : '点击让 TA 休息')}
     >
       <div className="member-icon">{CHIBI[def.id]({ color: def.color })}</div>
       <div className="member-name">{def.name}<em>{status}</em></div>
-      <div className="member-ctl" onClick={e => e.stopPropagation()}>
-        <input
-          type="range" className="track-vol" min="0" max="1" step="0.01"
-          value={st.volume}
-          style={{ '--thumb-color': def.color }}
-          onChange={e => dispatch({ type: 'VOL', id: def.id, value: +e.target.value })}
-        />
+      <div className="member-ctl" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
         <button
           className={`m-solo${st.solo ? ' soloed' : ''}`}
           onClick={() => dispatch({ type: 'SOLO', id: def.id })}
@@ -238,11 +273,15 @@ export default function Music() {
   const actxRef      = useRef(null)
   const analyserRef  = useRef(null)
   const freqRef      = useRef(null)
+  const trackAnRef   = useRef({})   // 每轨独立分析器（驱动该乐手的动作幅度）
+  const trackDataRef = useRef({})   // 每轨频率数据缓冲
+  const memberElRef  = useRef({})   // 每个乐手 DOM（写 --amp / --energy）
   const eqRef        = useRef(null)
   const miniEqRef    = useRef(null)
   const autoStarted  = useRef(false)
   const startingRef  = useRef(false)
   const gainNodesRef = useRef({})
+  const pannersRef   = useRef({})   // 每轨立体声声像节点
   const sourcesRef   = useRef({})
   const buffersRef   = useRef({})
   const durationRef  = useRef(0)
@@ -256,6 +295,30 @@ export default function Music() {
   const stopPlayRef  = useRef(null)
 
   const anySolo = Object.values(state.tracks).some(t => t.solo)
+
+  // 乐手在舞台上的位置（拖动改 → x=声像, y=音量）
+  const [positions, setPositions] = useState(() =>
+    Object.fromEntries(TRACKS.map(t => [t.id, { x: parseFloat(t.pos.left), y: parseFloat(t.pos.top) }]))
+  )
+  const posRef = useRef(positions)
+
+  // 只在桌面端(>900px，舞台为绝对定位)允许拖动；移动端退回点击+预设
+  const [draggable, setDraggable] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 901px)').matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 901px)')
+    const on = () => setDraggable(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+
+  const onDragMove = useCallback((id, x, y) => {
+    setPositions(p => { const n = { ...p, [id]: { x, y } }; posRef.current = n; return n })
+    const pan = pannersRef.current[id], actx = actxRef.current
+    if (pan && actx) pan.pan.setTargetAtTime(panFromX(x), actx.currentTime, 0.03)
+    dispatch({ type: 'VOL', id, value: volFromY(y) })
+  }, [])
 
   // sync gains when track states change
   useEffect(() => {
@@ -297,6 +360,18 @@ export default function Music() {
               mb[i].style.height = (12 + v * v * 88) + '%'
             }
           }
+          // 每轨电平 → 驱动对应乐手的动作幅度与发光
+          for (let k = 0; k < TRACKS.length; k++) {
+            const id = TRACKS[k].id
+            const ta = trackAnRef.current[id], d = trackDataRef.current[id], el = memberElRef.current[id]
+            if (!ta || !d || !el) continue
+            ta.getByteFrequencyData(d)
+            let sum = 0
+            for (let i = 1; i < d.length; i++) sum += d[i]
+            const lvl = Math.min(1, (sum / (d.length - 1)) / 110)   // 归一化到 0..1
+            el.style.setProperty('--amp', (0.15 + lvl * 1.15).toFixed(3))
+            el.style.setProperty('--energy', lvl.toFixed(3))
+          }
         }
       } else {
         // 静止时缓慢回落
@@ -308,6 +383,17 @@ export default function Music() {
         if (mb) for (let i = 0; i < mb.length; i++) {
           const h = parseFloat(mb[i].style.height) || 12
           if (h > 12) mb[i].style.height = Math.max(12, h - 9) + '%'
+        }
+        // 停止时乐手缓缓归于平静
+        for (let k = 0; k < TRACKS.length; k++) {
+          const el = memberElRef.current[TRACKS[k].id]
+          if (!el) continue
+          const a = parseFloat(el.style.getPropertyValue('--amp')) || 0.15
+          if (a > 0.16) {
+            const n = Math.max(0.15, a * 0.9)
+            el.style.setProperty('--amp', n.toFixed(3))
+            el.style.setProperty('--energy', Math.max(0, (n - 0.15)).toFixed(3))
+          }
         }
       }
       raf = requestAnimationFrame(tick)
@@ -330,8 +416,20 @@ export default function Music() {
       TRACKS.forEach(({ id }) => {
         const g = actx.createGain()
         g.gain.value = 1
-        g.connect(analyser)           // 所有声部汇入分析器
-        gainNodesRef.current[id] = g
+        // 声像节点：source → panner → gain
+        const pan = actx.createStereoPanner()
+        pan.pan.value = panFromX(posRef.current[id]?.x ?? 50)
+        pan.connect(g)
+        // 每轨先过自己的分析器，再汇入主分析器 → 既能读单轨电平，又保留总谱
+        const ta = actx.createAnalyser()
+        ta.fftSize = 32
+        ta.smoothingTimeConstant = 0.6
+        g.connect(ta)
+        ta.connect(analyser)
+        gainNodesRef.current[id]  = g
+        pannersRef.current[id]    = pan
+        trackAnRef.current[id]    = ta
+        trackDataRef.current[id]  = new Uint8Array(ta.frequencyBinCount)
       })
     }
     setLoadState('loading')
@@ -369,7 +467,7 @@ export default function Music() {
         try { sourcesRef.current[id]?.stop() } catch (_) {}
         const src = actx.createBufferSource()
         src.buffer = buffersRef.current[id]
-        src.connect(gainNodesRef.current[id])
+        src.connect(pannersRef.current[id])
         src.start(0, offset)
         gainNodesRef.current[id].gain.value = gains[id]
         sourcesRef.current[id] = src
@@ -443,8 +541,8 @@ export default function Music() {
     <section className="section" id="music">
       <div className="sec-label">音乐</div>
       <p className="music-intro">
-        《黑夜中》的 6 位乐手都在台上。<br />
-        点击谁，谁就下场休息；拉音量、按 S 独奏，由你来排这场演出。
+        《黑夜中》的 6 位乐手都在台上，每个人随自己的声部起伏。<br />
+        拖动换位置（左右=声像，前后=音量），点击让 TA 下场，按 S 独奏打追光——这场演出由你来排。
       </p>
 
       <div className="bandbox fade-up" ref={sectionRef}>
@@ -493,7 +591,7 @@ export default function Music() {
         <div className="tape-progress"><div className="tape-progress-fill" ref={progressRef} /></div>
 
         {/* ── Stage ── */}
-        <div className={`stage${state.isPlaying ? ' playing' : ''}`}>
+        <div className={`stage${state.isPlaying ? ' playing' : ''}${anySolo ? ' has-solo' : ''}`}>
           <div className="stage-grid" />
           <div className="stage-lights" />
           <div className="stage-eq" ref={eqRef}>{Array.from({ length: 28 }).map((_, i) => <i key={i} />)}</div>
@@ -504,7 +602,23 @@ export default function Music() {
               st={state.tracks[def.id]}
               anySolo={anySolo}
               dispatch={dispatch}
+              elRef={el => { memberElRef.current[def.id] = el }}
+              pos={positions[def.id]}
+              onDragMove={onDragMove}
+              draggable={draggable}
             />
+          ))}
+        </div>
+
+        {/* ── 一键场景 ── */}
+        <div className="daw-presets">
+          <span className="dp-label">一键场景</span>
+          {PRESETS.map(p => (
+            <button
+              key={p.id}
+              className="dp-btn"
+              onClick={() => { dispatch({ type: 'PRESET', on: p.on }); if (!isPlayingRef.current) startPlay() }}
+            >{p.label}</button>
           ))}
         </div>
       </div>
