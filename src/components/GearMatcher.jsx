@@ -219,7 +219,7 @@ function Reel({ items, sel, onSel }) {
 
 function getPhotoUrl(file, photoMap) {
   const p = photoMap?.[file]
-  return p?.url || `${BASE}photos/${file}.jpg`
+  return p?.thumb || p?.url || `${BASE}photos/${file}.jpg`
 }
 
 export default function GearMatcher({ onOpen, photoMap }) {

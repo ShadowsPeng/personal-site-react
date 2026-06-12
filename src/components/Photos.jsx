@@ -75,22 +75,24 @@ const captionOf = (base) => {
 }
 
 // 扫描 src/gallery/<cat>/*.{jpg,jpeg,png}（eager → 构建期解析，丢图刷新即生效）
-const FILES = import.meta.glob('../gallery/*/*.{jpg,jpeg,JPG,JPEG,png,PNG}', { eager: true, query: '?url', import: 'default' })
+// FULLS：原图原画质（点开 lightbox 用）。THUMBS：800px webp 缩略图（网格用，小而清晰、加载快）。
+const FULLS  = import.meta.glob('../gallery/*/*.{jpg,jpeg,JPG,JPEG,png,PNG}', { eager: true, query: '?url', import: 'default' })
+const THUMBS = import.meta.glob('../gallery/*/*.{jpg,jpeg,JPG,JPEG,png,PNG}', { eager: true, query: '?w=800&quality=82&format=webp', import: 'default' })
 
 const GALLERY = (() => {
   const byCat = {}
-  for (const path in FILES) {
+  for (const path in FULLS) {
     const m = path.match(/gallery\/([^/]+)\/([^/]+)\.\w+$/)
     if (!m) continue
     const [, cat, base] = m
-    ;(byCat[cat] ||= []).push({ base, url: FILES[path], caption: captionOf(base) })
+    ;(byCat[cat] ||= []).push({ base, url: FULLS[path], thumb: THUMBS[path] || FULLS[path], caption: captionOf(base) })
   }
   for (const cat in byCat) byCat[cat].sort((a, b) => a.base.localeCompare(b.base))
   return byCat
 })()
 
 const CATEGORIES = META.map(c => {
-  const photos = (GALLERY[c.id] || []).map(p => ({ file: p.base, url: p.url, caption: p.caption }))
+  const photos = (GALLERY[c.id] || []).map(p => ({ file: p.base, url: p.url, thumb: p.thumb, caption: p.caption }))
   return { ...c, photos }
 })
 
@@ -204,7 +206,7 @@ export default function Photos() {
         <div className="sq-grid" key={tab}>
           {current.photos.map((p, i) => (
             <figure key={p.file} className="sq-item" onClick={() => setActive({ list: current.photos, idx: i })}>
-              <img src={p.url} alt={p.caption} loading="lazy" />
+              <img src={p.thumb} alt={p.caption} loading="lazy" />
               {p.caption && <figcaption className="sq-cap">{p.caption}</figcaption>}
             </figure>
           ))}
