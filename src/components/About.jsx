@@ -6,10 +6,9 @@ const TRAITS = ['财务 PM', '系统设计', 'PM × AI', '胶片摄影', '哈苏
 
 // 性格 / 身份坐标（星座、MBTI 待用户确认真实值）
 const STATS = [
-  { k: 'MBTI', v: 'ENFJ' },
+  { k: 'MBTI', v: 'INTP' },
   { k: '星座', v: '金牛座' },
   { k: '城市', v: '上海' },
-  { k: '驱动', v: '体验 · 连接' },
 ]
 
 const SKETCH = [

@@ -51,7 +51,8 @@ npm run deploy
 - Cloudflare 备用地址：https://shadowspeng.pages.dev
 - GitHub 仓库：https://github.com/ShadowsPeng/personal-site-react
 - Cloudflare Pages 项目名：`shadowspeng`
-- 域名 & DNS：华为云
+- 域名 & DNS：Cloudflare（NS = `*.ns.cloudflare.com`）
+- 完整制作工作流（做页面/买域名/挂域名/上线/迭代）：见 `WORKFLOW.md`
 - 回滚：Cloudflare 后台 → Workers & Pages → shadowspeng → Deployments，点任意历史版本可回滚
 
 ---

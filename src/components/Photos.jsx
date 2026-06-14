@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import GearMatcher from './GearMatcher'
 
 const BASE = import.meta.env.BASE_URL
@@ -75,9 +75,10 @@ const captionOf = (base) => {
 }
 
 // 扫描 src/gallery/<cat>/*.{jpg,jpeg,png}（eager → 构建期解析，丢图刷新即生效）
-// FULLS：原图原画质（点开 lightbox 用）。THUMBS：800px webp 缩略图（网格用，小而清晰、加载快）。
-const FULLS  = import.meta.glob('../gallery/*/*.{jpg,jpeg,JPG,JPEG,png,PNG}', { eager: true, query: '?url', import: 'default' })
-const THUMBS = import.meta.glob('../gallery/*/*.{jpg,jpeg,JPG,JPEG,png,PNG}', { eager: true, query: '?w=800&quality=82&format=webp', import: 'default' })
+// FULLS：lightbox 大图，2560px WebP q85（清晰度肉眼无损，比原 jpeg 省 ~35%、点开更快）。
+// THUMBS：720px WebP q78 缩略图（网格用，小而清晰、加载快）。
+const FULLS  = import.meta.glob('../gallery/*/*.{jpg,jpeg,JPG,JPEG,png,PNG}', { eager: true, query: '?w=2560&quality=85&format=webp', import: 'default' })
+const THUMBS = import.meta.glob('../gallery/*/*.{jpg,jpeg,JPG,JPEG,png,PNG}', { eager: true, query: '?w=720&quality=78&format=webp', import: 'default' })
 
 const GALLERY = (() => {
   const byCat = {}
@@ -158,12 +159,42 @@ function Lightbox({ list, idx, setActive, onClose }) {
   )
 }
 
+// 鼠标位置 → 卡片 3D 倾斜 + 光泽点位。直接写元素 style，不触发 React 重渲染。
+const TILT_OK = typeof window !== 'undefined'
+  && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  && !window.matchMedia('(hover: none)').matches
+const onTilt = e => {
+  if (!TILT_OK) return
+  const el = e.currentTarget, r = el.getBoundingClientRect()
+  const px = (e.clientX - r.left) / r.width  - 0.5   // -0.5 ~ 0.5
+  const py = (e.clientY - r.top)  / r.height - 0.5
+  el.style.setProperty('--ry', `${(px * 11).toFixed(2)}deg`)
+  el.style.setProperty('--rx', `${(-py * 11).toFixed(2)}deg`)
+  el.style.setProperty('--gx', `${((px + 0.5) * 100).toFixed(1)}%`)
+  el.style.setProperty('--gy', `${((py + 0.5) * 100).toFixed(1)}%`)
+}
+const onTiltLeave = e => {
+  const el = e.currentTarget
+  el.style.setProperty('--rx', '0deg')
+  el.style.setProperty('--ry', '0deg')
+}
+
 export default function Photos() {
   const ref = useRef(null)
   const [active, setActive] = useState(null)   // { list, idx } | null
-  const [tab, setTab] = useState(CATEGORIES[0].id)
+  // 统一图集的当前筛选：按类型(cat) 或 按器材(gear)
+  const [sel, setSel] = useState({ type: 'cat', id: CATEGORIES[0].id })
 
-  const current = CATEGORIES.find(c => c.id === tab)
+  // 器材组装完成 → 把该组合的照片喂给同一个网格
+  const onGear = useCallback(({ key, files, title }) => {
+    const photos = files.map(f => PHOTO_BY_FILE[f]).filter(Boolean)
+    setSel({ type: 'gear', key, title, photos })
+  }, [])
+
+  const gridPhotos = sel.type === 'gear'
+    ? sel.photos
+    : (CATEGORIES.find(c => c.id === sel.id)?.photos || [])
+  const gridKey = sel.type === 'gear' ? `gear:${sel.key}` : sel.id
 
   useEffect(() => {
     const io = new IntersectionObserver(entries => {
@@ -173,26 +204,21 @@ export default function Photos() {
     return () => io.disconnect()
   }, [])
 
-  const openByFile = f => {
-    const cat = CATEGORIES.find(c => c.photos.some(p => p.file === f))
-    if (cat) setActive({ list: cat.photos, idx: cat.photos.findIndex(p => p.file === f) })
-    else if (PHOTO_BY_FILE[f]) setActive({ list: [PHOTO_BY_FILE[f]], idx: 0 })
-  }
-
   return (
     <section className="section" id="photos" ref={ref}>
       <div className="sec-label">摄影</div>
 
-      <GearMatcher onOpen={openByFile} photoMap={PHOTO_BY_FILE} />
+      {/* 器材组装台（按器材筛选）*/}
+      <GearMatcher onSelect={onGear} />
 
-      {/* 分类导航（hover 即切换）*/}
+      {/* 分类导航（按类型筛选，hover/点击即切换；与器材筛选共用下方同一个图集）*/}
       <nav className="cat-nav fade-up">
         {CATEGORIES.map(c => (
           <button
             key={c.id}
-            className={`cat-tab${tab === c.id ? ' on' : ''}`}
-            onMouseEnter={() => setTab(c.id)}
-            onClick={() => setTab(c.id)}
+            className={`cat-tab${sel.type === 'cat' && sel.id === c.id ? ' on' : ''}`}
+            onMouseEnter={() => setSel({ type: 'cat', id: c.id })}
+            onClick={() => setSel({ type: 'cat', id: c.id })}
           >
             <span className="cat-tab-ico">{ICONS[c.icon]}</span>
             <span className="cat-tab-txt">{c.title}</span>
@@ -201,18 +227,30 @@ export default function Photos() {
         ))}
       </nav>
 
-      {/* 正方形网格 */}
-      {current.photos.length > 0 ? (
-        <div className="sq-grid" key={tab}>
-          {current.photos.map((p, i) => (
-            <figure key={p.file} className="sq-item" onClick={() => setActive({ list: current.photos, idx: i })}>
+      {/* 器材组合的结果标题 */}
+      {sel.type === 'gear' && (
+        <div className="gear-result fade-up">
+          <span className="gr-title">{sel.title}</span>
+          <em className="gr-sub">{sel.photos.length > 0 ? `${sel.photos.length} 张` : 'Empty Roll · 这套组合还没出片'}</em>
+        </div>
+      )}
+
+      {/* 统一正方形网格 */}
+      {gridPhotos.length > 0 ? (
+        <div className="sq-grid" key={gridKey}>
+          {gridPhotos.map((p, i) => (
+            <figure
+              key={p.file} className="sq-item"
+              onMouseMove={onTilt} onMouseLeave={onTiltLeave}
+              onClick={() => setActive({ list: gridPhotos, idx: i })}
+            >
               <img src={p.thumb} alt={p.caption} loading="lazy" />
               {p.caption && <figcaption className="sq-cap">{p.caption}</figcaption>}
             </figure>
           ))}
         </div>
       ) : (
-        <div className="cat-empty">敬请期待 · Coming soon</div>
+        <div className="cat-empty">{sel.type === 'gear' ? 'Empty Roll · 这套组合还没出片' : '敬请期待 · Coming soon'}</div>
       )}
 
       {active && <Lightbox list={active.list} idx={active.idx} setActive={setActive} onClose={() => setActive(null)} />}

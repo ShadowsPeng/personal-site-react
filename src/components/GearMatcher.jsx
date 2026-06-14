@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import SHOTS from '../gearShots.json'   // 由 EXIF 自动生成的「相机+镜头+胶片 → 照片」映射
 
 const BASE = import.meta.env.BASE_URL
 
@@ -8,8 +9,6 @@ const BODIES = [
   { id: 'r62',     name: 'CANON R6 II' },
   { id: 'etrsi',   name: 'BRONICA ETRSI', film: true },
   { id: 'p67',     name: 'PENTAX 67',     film: true },
-  { id: 'pocket3', name: 'DJI POCKET 3' },
-  { id: 'action4', name: 'DJI ACTION 4' },
 ]
 
 // 镜头轮盘只放真镜头（胶卷另挂到下面）
@@ -17,31 +16,23 @@ const GLASS = [
   { id: 'rf24105',  name: 'RF 24-105 F4 L' },
   { id: 'rf1530',   name: 'RF 15-30' },
   { id: 'rf200800', name: 'RF 200-800' },
-  { id: 'mk85',     name: '美科 RF 85 F1.8' },
   { id: 'pe75',     name: 'ZENZANON PE 75 F2.8' },
   { id: 'p6790',    name: 'SMC 67 90 F2.8' },
-  { id: 'builtin',  name: '内置镜头' },
 ]
 
 // 胶片机身用的胶卷
 const FILMS = {
-  e100:     { name: '柯达 E100',      fmt: '120' },
-  lucky200: { name: '乐凯 Lucky 200', fmt: '135' },
+  e100: { name: '柯达 E100',  fmt: '120' },
+  c200: { name: '乐凯 C200',  fmt: '135' },
 }
 const FILM_OF = {
-  etrsi: ['e100', 'lucky200'],
-  p67:   ['e100', 'lucky200'],
+  etrsi: ['e100', 'c200'],   // ETRSI 拍过 E100 和 老乐凯 C200
+  p67:   ['e100'],           // 宾得67 只有 E100
 }
 
-// 「机身id+镜头id」→ 这对组合拍出的照片（从 gallery 真实文件名，不含扩展名）
-const SHOTS = {
-  'r62+rf200800': ['翠鸟_1', '翠鸟_15', '戴胜1_1', '红耳鹎_1', '黑枕黄鹂000091'],
-  'r62+rf1530':   ['119_5', '119_7', '南浦大桥毕业', '日出'],
-  'r62+rf24105':  ['张江双子塔_3', '南浦大桥悬日', '久安公寓114', '深圳138'],
-  'r62+mk85':     ['333131', '岗厦北135', '台风前夕145'],
-  'etrsi+pe75':   ['11000006', '11000008', '36400012', '61010008', '61010011'],
-  'p67+p6790':    ['89190001', '89190004', '89190005'],
-}
+// 组合键：数码机身 = 「机身+镜头」；胶片机身 = 「机身+镜头+胶卷」。
+// 映射在 src/gearShots.json，由 EXIF 焦段(数码就近分到 RF15-30/24-105/200-800)+ F:\胶片 文件夹(胶片)自动生成。
+// 重新生成：见 project 记忆里的脚本。
 // ────────────────────────────────────────────────────────
 
 // 产品图缺失时的简笔图标
@@ -159,6 +150,20 @@ function FilmCan() {
   )
 }
 
+function FilmImg({ id }) {
+  const [err, setErr] = useState(false)
+  if (err) return <FilmCan />
+  return (
+    <img
+      className="film-img"
+      src={`${BASE}gear/${id}.png`}
+      alt=""
+      loading="lazy"
+      onError={() => setErr(true)}
+    />
+  )
+}
+
 function GearImg({ id }) {
   const [err, setErr] = useState(false)
   if (err) return <div className="g-fallback">{FALLBACK[id]}</div>
@@ -173,104 +178,168 @@ function GearImg({ id }) {
   )
 }
 
-function Reel({ items, sel, onSel }) {
-  const ref = useRef(null)
-  const raf = useRef(0)
-
-  // 滚动时找离中心最近的一项作为选中
-  const onScroll = () => {
-    cancelAnimationFrame(raf.current)
-    raf.current = requestAnimationFrame(() => {
-      const el = ref.current
-      if (!el) return
-      const center = el.scrollLeft + el.clientWidth / 2
-      let best = null, bestD = Infinity
-      for (const child of el.children) {
-        const c = child.offsetLeft + child.offsetWidth / 2
-        const d = Math.abs(c - center)
-        if (d < bestD) { bestD = d; best = child.dataset.id }
-      }
-      if (best && best !== sel) onSel(best)
-    })
-  }
-
-  useEffect(() => () => cancelAnimationFrame(raf.current), [])
-
+// 取景台里的小人摄影师：idle→站着；shooting/done→举机到脸前拍一张
+function Photographer({ phase }) {
   return (
-    <div className="reel-wrap">
-      <div className="reel" ref={ref} onScroll={onScroll}>
-        {items.map(it => (
-          <div
-            key={it.id}
-            data-id={it.id}
-            className={`reel-item${sel === it.id ? ' on' : ''}`}
-            title={it.name}
-            onClick={e => e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })}
-          >
-            <div className="reel-box"><GearImg id={it.id} /></div>
-            <span className="reel-name">{it.name}</span>
-          </div>
-        ))}
-      </div>
-      <div className="reel-marker" />
-    </div>
+    <svg className={`tog tog-${phase}`} viewBox="0 0 200 160" width="190" height="152" aria-hidden="true">
+      <ellipse className="tog-shadow" cx="92" cy="150" rx="42" ry="6" />
+      {/* 腿 + 躯干 + 头 */}
+      <path className="tog-line" d="M84 104 L74 140 M100 104 L110 140" />
+      <path className="tog-line" d="M92 62 L92 106" />
+      <circle className="tog-line" cx="92" cy="50" r="13" />
+      {/* 手臂 + 相机（拍摄时整体上抬到脸前）*/}
+      <g className="tog-cam">
+        <path className="tog-line" d="M92 70 L70 86 M92 70 L120 86" />
+        <rect className="tog-body" x="66" y="80" width="58" height="33" rx="5" />
+        <rect className="tog-body" x="86" y="73" width="18" height="9" rx="2" />
+        <circle className="tog-lens"  cx="95" cy="96" r="13" />
+        <circle className="tog-lensi" cx="95" cy="96" r="6" />
+      </g>
+      {/* 快门火花 */}
+      <g className="tog-spark">
+        <line x1="138" y1="70" x2="151" y2="63" /><line x1="141" y1="82" x2="156" y2="82" /><line x1="138" y1="94" x2="151" y2="101" />
+      </g>
+    </svg>
   )
 }
 
-function getPhotoUrl(file, photoMap) {
-  const p = photoMap?.[file]
-  return p?.thumb || p?.url || `${BASE}photos/${file}.jpg`
-}
+// 推箱子组装台：把机身格 + 镜头格拖（或点）进右侧取景台 → 小人组装 + 拍一张 → 回传该组合的照片
+export default function GearMatcher({ onSelect }) {
+  const [slotBody, setSlotBody]   = useState(null)
+  const [slotGlass, setSlotGlass] = useState(null)
+  const [film, setFilm]   = useState('e100')
+  const [phase, setPhase] = useState('idle')   // idle | assembling | shooting | done
+  const [ghost, setGhost] = useState(null)     // 拖拽时跟手的虚影
+  const zoneRef = useRef(null)
 
-export default function GearMatcher({ onOpen, photoMap }) {
-  const [body, setBody]   = useState(BODIES[0].id)
-  const [glass, setGlass] = useState(GLASS[0].id)
+  const bodyDef  = slotBody  ? BODIES.find(b => b.id === slotBody) : null
+  const glassDef = slotGlass ? GLASS.find(g => g.id === slotGlass) : null
+  const isFilm   = !!bodyDef?.film
+  const films    = isFilm ? (FILM_OF[slotBody] || []) : []
+  const curFilm  = films.includes(film) ? film : films[0]
+  const ready    = !!(slotBody && slotGlass)
+  const comboKey = isFilm ? `${slotBody}+${slotGlass}+${curFilm}` : `${slotBody}+${slotGlass}`
+  const files    = ready ? (SHOTS[comboKey] || []) : []
 
-  const bodyDef  = BODIES.find(b => b.id === body)
-  const glassDef = GLASS.find(g => g.id === glass)
-  const files    = SHOTS[`${body}+${glass}`] || []
+  const onSelRef = useRef(onSelect)
+  useEffect(() => { onSelRef.current = onSelect })
+
+  // 机身+镜头都就位 → 组装(0.85s) → 拍摄(0.65s) → 出片
+  useEffect(() => {
+    if (!ready) { setPhase('idle'); return }
+    setPhase('assembling')
+    const t1 = setTimeout(() => setPhase('shooting'), 850)
+    const t2 = setTimeout(() => {
+      setPhase('done')
+      const title = `${bodyDef.name} × ${glassDef.name}${isFilm && curFilm ? ` × ${FILMS[curFilm].name}` : ''}`
+      onSelRef.current?.({ key: comboKey, files, title })
+    }, 1500)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comboKey, ready])
+
+  const assign = (kind, id) => kind === 'body' ? setSlotBody(id) : setSlotGlass(id)
+
+  // 指针拖拽（兼容触摸）：拖进取景台或就地点一下都算选中
+  const startDrag = (kind, id) => e => {
+    const sx = e.clientX, sy = e.clientY
+    setGhost({ id, x: sx, y: sy })
+    const move = ev => setGhost(g => g && { ...g, x: ev.clientX, y: ev.clientY })
+    const up = ev => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      setGhost(null)
+      const z = zoneRef.current?.getBoundingClientRect()
+      const inZone = z && ev.clientX >= z.left && ev.clientX <= z.right && ev.clientY >= z.top && ev.clientY <= z.bottom
+      const moved = Math.hypot(ev.clientX - sx, ev.clientY - sy) > 6
+      if (moved && inZone) assign(kind, id)   // 拖进取景台；点选(未移动)交给 onClick
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
+
+  const reset = () => { setSlotBody(null); setSlotGlass(null); setPhase('idle') }
+
+  const Tile = ({ kind, def }) => {
+    const used = (kind === 'body' ? slotBody : slotGlass) === def.id
+    return (
+      <button
+        type="button"
+        className={`gear-tile${used ? ' used' : ''}`}
+        onPointerDown={startDrag(kind, def.id)}
+        onClick={() => assign(kind, def.id)}
+        title={`${def.name} — 拖进取景台，或点一下`}
+      >
+        <span className="tile-pic"><GearImg id={def.id} /></span>
+        <span className="tile-name">{def.name}</span>
+      </button>
+    )
+  }
 
   return (
     <div className="gear-lab fade-up">
-      <p className="gear-intro">滑动两条轮盘，把一台机身和一支镜头对进中间的取景框，看看这套组合拍出了什么。</p>
+      <p className="gear-intro">把一台机身和一支镜头拖进右边的取景台（点一下也行），小人会替你装好、拍一张——看看这套组合拍了什么。</p>
 
-      <div className="gear-row-lbl">Body / 机身</div>
-      <Reel items={BODIES} sel={body} onSel={setBody} />
+      <div className="gear-assembler">
+        {/* 左：器材货架 */}
+        <div className="gear-shelf">
+          <div className="gear-row-lbl">Body / 机身</div>
+          <div className="tile-row">{BODIES.map(b => <Tile key={b.id} kind="body" def={b} />)}</div>
 
-      <div className="gear-row-lbl">Glass / 镜头</div>
-      <Reel items={GLASS} sel={glass} onSel={setGlass} />
+          <div className="gear-row-lbl">Glass / 镜头</div>
+          <div className="tile-row">{GLASS.map(g => <Tile key={g.id} kind="lens" def={g} />)}</div>
 
-      {bodyDef.film && (
-        <div className="film-strip">
-          <div className="gear-row-lbl">Film / 胶卷</div>
-          <div className="film-list">
-            {FILM_OF[body].map(fid => (
-              <div key={fid} className="film-chip">
-                <FilmCan />
-                <span className="film-name">{FILMS[fid].name}<em>{FILMS[fid].fmt}</em></span>
+          {isFilm && (
+            <>
+              <div className="gear-row-lbl">Film / 胶卷</div>
+              <div className="film-list">
+                {films.map(fid => (
+                  <button
+                    key={fid}
+                    type="button"
+                    className={`film-chip${fid === curFilm ? ' on' : ''}`}
+                    onClick={() => setFilm(fid)}
+                  >
+                    <FilmImg id={fid} />
+                    <span className="film-name">{FILMS[fid].name}<em>{FILMS[fid].fmt}</em></span>
+                  </button>
+                ))}
               </div>
-            ))}
+            </>
+          )}
+        </div>
+
+        {/* 右：取景台 + 小人 */}
+        <div ref={zoneRef} className={`viewfinder is-${phase}${ready ? ' ready' : ''}`}>
+          <div className="vf-head">取景台 / Studio</div>
+          <div className="vf-slots">
+            <div className={`vf-slot${slotBody ? ' filled' : ''}`}>
+              {slotBody ? <GearImg id={slotBody} /> : <span className="vf-ph">机身</span>}
+            </div>
+            <span className="vf-plus">＋</span>
+            <div className={`vf-slot${slotGlass ? ' filled' : ''}`}>
+              {slotGlass ? <GearImg id={slotGlass} /> : <span className="vf-ph">镜头</span>}
+            </div>
           </div>
+          <div className="vf-stage">
+            <Photographer phase={phase} />
+            <div className="vf-flash" />
+          </div>
+          <div className="vf-foot">
+            {!ready
+              ? <span className="vf-hint">把机身 + 镜头拖进来</span>
+              : phase === 'done'
+                ? <button type="button" className="vf-reset" onClick={reset}>换一套 ↺</button>
+                : <span className="vf-hint">组装中…</span>}
+          </div>
+        </div>
+      </div>
+
+      {ghost && (
+        <div className="drag-ghost" style={{ left: ghost.x, top: ghost.y }}>
+          <GearImg id={ghost.id} />
         </div>
       )}
-
-      <div className="combo">
-        <div className="combo-title">
-          {bodyDef.name} × {glassDef.name}
-          {files.length > 0 && ` · ${files.length} 张`}
-        </div>
-        {files.length > 0 ? (
-          <div className="combo-strip">
-            {files.map(f => (
-              <figure key={f} className="combo-ph" onClick={() => onOpen(f)}>
-                <img src={getPhotoUrl(f, photoMap)} alt="" loading="lazy" />
-              </figure>
-            ))}
-          </div>
-        ) : (
-          <div className="combo-empty">Empty Roll — 这对组合还没出片</div>
-        )}
-      </div>
     </div>
   )
 }

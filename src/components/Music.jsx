@@ -1,8 +1,20 @@
 import { useEffect, useRef, useReducer, useCallback, useState } from 'react'
 
 // ─── constants ────────────────────────────────────────
-const BPM = 95
-const STEM_BASE = `${import.meta.env.BASE_URL}stems`
+const BASE = import.meta.env.BASE_URL
+
+// ─── 播放列表 ──────────────────────────────────────────
+// 每首歌 = 一套 6 轨 stem（用 demucs htdemucs_6s 拆出 vocals/drums/bass/guitar/piano/other.mp3）。
+// 补充新歌的步骤：
+//   1. 把 6 个 mp3 放到 public/stems/<id>/ 下（文件名固定为上面这 6 个）
+//   2. 在下面 SONGS 里加一行 { id:'<id>', title:'歌名', dir:'stems/<id>', bpm: 90 }
+// 第一首《黑夜中》的 stem 直接在 public/stems/ 根目录，所以 dir 就是 'stems'。
+const SONGS = [
+  { id: 'heiyezhong', title: '黑夜中', dir: 'stems', bpm: 95 },
+]
+
+// 曲目列表固定显示 10 个槽位（01–10），没排上的显示「待补充」占位
+const PLAYLIST_SLOTS = 10
 
 const TRACKS = [
   { id: 'vocals', name: '主唱',   color: '#5cd6ff', pos: { left: '50%', top: '70%' } },
@@ -284,6 +296,7 @@ export default function Music() {
   const pannersRef   = useRef({})   // 每轨立体声声像节点
   const sourcesRef   = useRef({})
   const buffersRef   = useRef({})
+  const loadedDirRef = useRef(null)   // 当前 buffers 属于哪首歌的 stem 目录
   const durationRef  = useRef(0)
   const startTRef    = useRef(0)
   const elapsedRef   = useRef(0)
@@ -295,6 +308,12 @@ export default function Music() {
   const stopPlayRef  = useRef(null)
 
   const anySolo = Object.values(state.tracks).some(t => t.solo)
+
+  // 当前播放的歌（播放列表索引）
+  const [songIdx, setSongIdx] = useState(0)
+  const song = SONGS[songIdx]
+  const songIdxRef = useRef(0)
+  const songRef    = useRef(SONGS[0])
 
   // 乐手在舞台上的位置（拖动改 → x=声像, y=音量）
   const [positions, setPositions] = useState(() =>
@@ -403,7 +422,8 @@ export default function Music() {
   }, [])
 
   const ensureLoaded = useCallback(async () => {
-    if (loadState === 'ready') return true
+    const dir = `${BASE}${songRef.current.dir}`
+    if (loadedDirRef.current === dir) return true   // 这首歌的 buffers 已就绪
     if (!actxRef.current) {
       const actx = new (window.AudioContext || window.webkitAudioContext)()
       actxRef.current = actx
@@ -434,14 +454,18 @@ export default function Music() {
     }
     setLoadState('loading')
     try {
+      durationRef.current = 0
+      const next = {}
       await Promise.all(TRACKS.map(async ({ id }) => {
-        const res = await fetch(`${STEM_BASE}/${id}.mp3`)
+        const res = await fetch(`${dir}/${id}.mp3`)
         if (!res.ok) throw new Error(`${id}: ${res.status}`)
         const ab  = await res.arrayBuffer()
         const buf = await actxRef.current.decodeAudioData(ab)
-        buffersRef.current[id] = buf
-        durationRef.current    = Math.max(durationRef.current, buf.duration)
+        next[id] = buf
+        durationRef.current = Math.max(durationRef.current, buf.duration)
       }))
+      buffersRef.current = next
+      loadedDirRef.current = dir
       setLoadState('ready')
       if (durDispRef.current) durDispRef.current.textContent = fmt(durationRef.current)
       return true
@@ -450,7 +474,7 @@ export default function Music() {
       setLoadState('error')
       return false
     }
-  }, [loadState])
+  }, [])
 
   const startPlay = useCallback(async () => {
     if (isPlayingRef.current || startingRef.current) return   // 防并发重复起播
@@ -524,6 +548,28 @@ export default function Music() {
   // 进页面后首次交互自动起播（浏览器禁止无交互带声自动播）
   const startPlayRef = useRef(startPlay)
   useEffect(() => { startPlayRef.current = startPlay }, [startPlay])
+
+  // 切歌：停掉当前 → 复位进度 → 切到新歌并重载 stem → 自动起播
+  const selectSong = useCallback((idx) => {
+    if (idx === songIdxRef.current) {            // 点当前曲目 = 播放/暂停切换
+      isPlayingRef.current ? stopPlay() : startPlayRef.current()
+      return
+    }
+    TRACKS.forEach(({ id }) => { try { sourcesRef.current[id]?.stop() } catch (_) {} })
+    isPlayingRef.current = false
+    elapsedRef.current  = 0
+    playTimeRef.current = 0
+    durationRef.current = 0
+    if (timeDispRef.current) timeDispRef.current.textContent = '0:00'
+    if (durDispRef.current)  durDispRef.current.textContent  = '0:00'
+    if (progressRef.current) progressRef.current.style.width = '0%'
+    songIdxRef.current = idx
+    songRef.current    = SONGS[idx]
+    loadedDirRef.current = null                  // 强制重载新歌 stem
+    setSongIdx(idx)
+    dispatch({ type: 'STOP' })
+    setTimeout(() => startPlayRef.current(), 60)  // 等 song 状态刷新后起播
+  }, [stopPlay])
   useEffect(() => {
     const evts = ['pointerdown', 'keydown', 'wheel', 'touchstart']
     const kick = () => {
@@ -541,11 +587,41 @@ export default function Music() {
     <section className="section" id="music">
       <div className="sec-label">音乐</div>
       <p className="music-intro">
-        《黑夜中》的 6 位乐手都在台上，每个人随自己的声部起伏。<br />
+        《{song.title}》的 6 位乐手都在台上，每个人随自己的声部起伏。<br />
         拖动换位置（左右=声像，前后=音量），点击让 TA 下场，按 S 独奏打追光——这场演出由你来排。
       </p>
 
       <div className="bandbox fade-up" ref={sectionRef}>
+
+        {/* ── 播放列表（侧栏，01–10 槽位）── */}
+        <aside className="pl-sidebar">
+          <span className="pl-head">曲目 / Tracklist</span>
+          <div className="pl-list">
+            {Array.from({ length: PLAYLIST_SLOTS }).map((_, i) => {
+              const s = SONGS[i]
+              const on = i === songIdx
+              return (
+                <button
+                  key={i}
+                  className={`pl-item${s ? '' : ' empty'}${on ? ' on' : ''}`}
+                  onClick={() => s && selectSong(i)}
+                  disabled={!s}
+                  title={s ? (on ? (state.isPlaying ? '点击暂停' : '点击播放') : '切到这首') : '待补充'}
+                >
+                  <span className="pl-idx">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="pl-title">{s ? s.title : '待补充'}</span>
+                  {s && (on
+                    ? (state.isPlaying
+                        ? <span className="pl-eq"><i /><i /><i /></span>
+                        : <span className="pl-state">▌▌</span>)
+                    : <span className="pl-state">▶</span>)}
+                </button>
+              )
+            })}
+          </div>
+        </aside>
+
+        <div className="band-main">
 
         {/* ── Transport ── */}
         <div className="daw-transport">
@@ -583,7 +659,7 @@ export default function Music() {
             ? <span className="t-bpm">加载中…</span>
             : loadState === 'error'
               ? <span className="t-bpm">加载失败</span>
-              : <span className="t-bpm">{BPM} BPM</span>}
+              : <span className="t-bpm">{song.bpm} BPM</span>}
           <span className="t-loop">LIVE · 6 STEMS</span>
         </div>
 
@@ -621,6 +697,8 @@ export default function Music() {
             >{p.label}</button>
           ))}
         </div>
+
+        </div>{/* /.band-main */}
       </div>
 
       <p className="music-note">* 由 demucs (htdemucs_6s) 从原曲分离的真实 6 轨音频。</p>
@@ -641,7 +719,7 @@ export default function Music() {
       <div className="mini-info">
         <div className="mini-eq" ref={miniEqRef}>{Array.from({ length: 16 }).map((_, i) => <i key={i} />)}</div>
         <div className="mini-title">
-          {loadState === 'loading' ? '加载中…' : loadState === 'error' ? '加载失败' : '《黑夜中》'}
+          {loadState === 'loading' ? '加载中…' : loadState === 'error' ? '加载失败' : `《${song.title}》`}
           <span>{state.isPlaying ? 'NOW PLAYING' : 'PAUSED'}</span>
         </div>
       </div>
