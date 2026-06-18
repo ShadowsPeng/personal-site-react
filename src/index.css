@@ -7,11 +7,14 @@
   --border:   #252523;
   --text-1:   #ede9e0;
   --text-2:   #7a7a72;
-  --text-3:   #3a3a36;
+  --text-3:   #57574f;
   --accent:   #d4b896;
 }
 
 html { scroll-behavior: smooth; }
+
+/* 锚点跳转时给固定导航让出高度，章节标题不再被压在导航条下 */
+section[id], footer[id] { scroll-margin-top: 84px; }
 
 /* 全屏水波层：固定铺满视口，垫在所有内容下方，留白处透出涟漪 */
 .ripple-canvas {
@@ -112,11 +115,11 @@ body {
   font-family: 'Instrument Serif', 'Noto Serif SC', serif;
   font-size: clamp(52px, 15.5vw, 248px);          /* 超大·近铺满首屏 */
   line-height: .9; letter-spacing: -.02em; white-space: nowrap;
-  background: linear-gradient(96deg, #ffffff 0%, #e9dcc4 38%, #9fd0ff 72%, #c9a6ff 100%);
+  background: linear-gradient(96deg, #fffaf0 0%, #f0dcb8 40%, #d4b896 72%, #b98f63 100%);
   background-size: 220% 100%;
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
-  filter: drop-shadow(0 6px 44px rgba(80,120,200,.4));
+  filter: drop-shadow(0 6px 44px rgba(150,110,60,.4));
   animation: nameShimmer 9s ease-in-out infinite;
 }
 .hero-name-cn { font-family: 'Noto Serif SC', serif; font-weight: 600; }
@@ -337,29 +340,29 @@ body {
   box-shadow: 0 0 6px rgba(212,184,150,.5);
 }
 
-/* STAGE：赛博霓虹舞台 */
+/* STAGE：暖金舞台（与全站编辑调性统一，乐手各自配色保留） */
 .stage {
   position: relative; height: 540px; overflow: hidden;
   background:
-    radial-gradient(120% 90% at 50% -10%, #1a2540 0%, #0c1226 55%, #06080f 100%);
+    radial-gradient(120% 90% at 50% -10%, #20180f 0%, #131009 55%, #0a0907 100%);
 }
-/* 透视霓虹网格地面 */
+/* 透视网格地面（暖金） */
 .stage-grid {
   position: absolute; left: -25%; right: -25%; bottom: 0; height: 46%; z-index: 0;
   background-image:
-    repeating-linear-gradient(to right, rgba(92,214,255,.28) 0 1px, transparent 1px 46px),
-    repeating-linear-gradient(to bottom, rgba(92,214,255,.22) 0 1px, transparent 1px 46px);
+    repeating-linear-gradient(to right, rgba(212,184,150,.26) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(to bottom, rgba(212,184,150,.20) 0 1px, transparent 1px 46px);
   transform: perspective(340px) rotateX(64deg); transform-origin: bottom center;
   mask-image: linear-gradient(to top, #000 10%, transparent 92%);
   -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 92%);
 }
-/* 霓虹聚光灯锥（冷色） */
+/* 聚光灯锥（暖色） */
 .stage-lights {
   position: absolute; inset: 0; pointer-events: none; z-index: 1;
   background:
-    radial-gradient(34% 68% at 50% -10%, rgba(124,146,255,.45), transparent 72%),
-    radial-gradient(26% 58% at 22% -8%, rgba(92,214,255,.30), transparent 74%),
-    radial-gradient(26% 58% at 78% -8%, rgba(201,139,255,.30), transparent 74%);
+    radial-gradient(34% 68% at 50% -10%, rgba(240,200,140,.40), transparent 72%),
+    radial-gradient(26% 58% at 22% -8%, rgba(212,184,150,.26), transparent 74%),
+    radial-gradient(26% 58% at 78% -8%, rgba(200,150,90,.26), transparent 74%);
 }
 /* 频谱条 */
 .stage-eq {
@@ -369,7 +372,7 @@ body {
 }
 .stage-eq i {
   flex: 1 1 0; height: 6%;
-  background: linear-gradient(to top, #5cd6ff, rgba(124,146,255,.25));
+  background: linear-gradient(to top, #e9c993, rgba(212,184,150,.22));
   border-radius: 2px 2px 0 0;
   transition: height .09s linear;
 }
@@ -445,7 +448,7 @@ body {
 
 .member-name {
   position: relative; z-index: 2;
-  font-size: 11px; color: #cdd6e6; font-weight: 500; letter-spacing: .1em; margin-top: 2px;
+  font-size: 11px; color: #ded6c6; font-weight: 500; letter-spacing: .1em; margin-top: 2px;
   text-shadow: 0 0 6px rgba(0,0,0,.6);
 }
 .member-name em {
@@ -492,11 +495,11 @@ body {
 .m-solo {
   font-size: 8px; font-weight: 600; letter-spacing: .1em;
   padding: 3px 7px; background: rgba(255,255,255,.04);
-  border: 1px solid rgba(160,180,210,.3); color: #aeb9cc;
+  border: 1px solid rgba(200,184,150,.32); color: #b7ad9a;
   cursor: pointer; border-radius: 3px; transition: all .15s;
 }
-.m-solo:hover { border-color: #5cd6ff; color: #5cd6ff; }
-.m-solo.soloed { background: #5cd6ff; border-color: #5cd6ff; color: #06080f; box-shadow: 0 0 8px rgba(92,214,255,.6); }
+.m-solo:hover { border-color: var(--accent); color: var(--accent); }
+.m-solo.soloed { background: var(--accent); border-color: var(--accent); color: #1a1407; box-shadow: 0 0 8px rgba(212,184,150,.55); }
 
 .music-note { font-size: 11px; color: var(--text-3); margin-top: 18px; letter-spacing: .04em; }
 
@@ -505,26 +508,28 @@ body {
   position: fixed; right: 22px; bottom: 22px; z-index: 120;
   display: flex; align-items: center; gap: 12px;
   padding: 10px 16px 10px 10px; border-radius: 40px;
-  background: rgba(14,18,28,.72); backdrop-filter: blur(14px);
-  border: 1px solid rgba(124,146,255,.22);
+  background: rgba(20,18,14,.74); backdrop-filter: blur(14px);
+  border: 1px solid rgba(212,184,150,.22);
   box-shadow: 0 10px 34px rgba(0,0,0,.45);
-  transition: border-color .3s, box-shadow .3s;
+  transition: border-color .3s, box-shadow .3s, transform .35s ease, opacity .35s ease;
 }
-.mini-player.on { border-color: rgba(92,214,255,.5); box-shadow: 0 10px 38px rgba(40,90,140,.5); }
+.mini-player.on { border-color: rgba(212,184,150,.5); box-shadow: 0 10px 38px rgba(120,90,40,.4); }
+/* 滚到页脚时收起，不再压住页脚版权行 */
+.mini-player.tucked { transform: translateY(160%); opacity: 0; pointer-events: none; }
 .mini-btn {
   flex: none; width: 38px; height: 38px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(160,180,210,.3); background: rgba(255,255,255,.04);
-  color: #cdd6e6; cursor: pointer; transition: all .2s;
+  border: 1px solid rgba(200,184,150,.32); background: rgba(255,255,255,.04);
+  color: #ded6c6; cursor: pointer; transition: all .2s;
 }
-.mini-btn:hover { border-color: #5cd6ff; color: #5cd6ff; }
+.mini-btn:hover { border-color: var(--accent); color: var(--accent); }
 .mini-btn:disabled { opacity: .5; cursor: default; }
-.mini-player.on .mini-btn { color: #5cd6ff; border-color: rgba(92,214,255,.5); }
+.mini-player.on .mini-btn { color: var(--accent); border-color: rgba(212,184,150,.5); }
 .mini-info { display: flex; flex-direction: column; gap: 4px; }
 .mini-eq { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
 .mini-eq i {
   width: 2px; height: 12%; border-radius: 1px;
-  background: linear-gradient(to top, #5cd6ff, rgba(124,146,255,.4));
+  background: linear-gradient(to top, #e9c993, rgba(212,184,150,.4));
   transition: height .09s linear;
 }
 .mini-title {
@@ -534,7 +539,7 @@ body {
   margin-left: 8px; font-size: 8px; letter-spacing: .16em;
   color: var(--text-3); vertical-align: middle;
 }
-.mini-player.on .mini-title span { color: #5cd6ff; }
+.mini-player.on .mini-title span { color: var(--accent); }
 @media (max-width: 900px) { .mini-player { right: 14px; bottom: 14px; padding: 8px 13px 8px 8px; } }
 
 /* GEAR LAB（器材配对） */
@@ -568,7 +573,7 @@ body {
 .gear-tile.used { opacity: .4; border-style: dashed; }
 .tile-pic {
   width: 100%; height: 56px; display: flex; align-items: center; justify-content: center;
-  background: #f4f3f0; border-radius: 5px;
+  background: #ece6da; border-radius: 5px;
 }
 .tile-pic .g-img { max-height: 46px; max-width: 88px; }
 .tile-name { font-size: 10px; letter-spacing: .03em; color: var(--text-3); text-align: center; line-height: 1.3; }
@@ -587,7 +592,7 @@ body {
   border: 1px dashed var(--border); background: rgba(255,255,255,.02);
   display: flex; align-items: center; justify-content: center;
 }
-.vf-slot.filled { border-style: solid; border-color: var(--accent); background: #f4f3f0; }
+.vf-slot.filled { border-style: solid; border-color: var(--accent); background: #ece6da; }
 .vf-slot .g-img { max-height: 52px; max-width: 110px; }
 .vf-ph { font-size: 11px; color: var(--text-3); letter-spacing: .08em; }
 .vf-plus { color: var(--text-3); font-size: 14px; }
@@ -629,7 +634,7 @@ body {
 .drag-ghost {
   position: fixed; z-index: 1000; pointer-events: none; transform: translate(-50%,-50%);
   width: 88px; height: 58px; display: flex; align-items: center; justify-content: center;
-  background: #f4f3f0; border: 1px solid var(--accent); border-radius: 6px; opacity: .92;
+  background: #ece6da; border: 1px solid var(--accent); border-radius: 6px; opacity: .92;
 }
 .drag-ghost .g-img { max-height: 46px; max-width: 76px; }
 
@@ -815,6 +820,9 @@ body {
 /* 响应式 */
 @media (max-width: 560px) {
   .hero-inner { padding: 0 28px; }
+  .hero-eyebrow { letter-spacing: .14em; gap: 8px; margin-bottom: 18px; }
+  .hero-eyebrow::before { width: 24px; }
+  .hero-desc { font-size: 13px; line-height: 1.85; margin-top: 18px; }
   .hero-bl { left: 24px; } .hero-br { right: 24px; }
   .hero-corner { bottom: 56px; }
   .hero-corner strong { font-size: 20px; }

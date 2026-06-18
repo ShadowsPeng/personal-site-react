@@ -280,6 +280,8 @@ function Member({ def, st, anySolo, dispatch, elRef, pos, onDragMove, draggable 
 export default function Music() {
   const [state, dispatch] = useReducer(reducer, null, initState)
   const [loadState, setLoadState] = useState('idle') // idle | loading | ready | error
+  const [everPlayed, setEverPlayed] = useState(false) // 播过一次后才挂浮动播放器（避免常驻“PAUSED”像没关的弹窗）
+  const [hideMini, setHideMini] = useState(false)      // 滚到页脚时收起，不压住页脚版权行
 
   // audio refs
   const actxRef      = useRef(null)
@@ -479,6 +481,7 @@ export default function Music() {
   const startPlay = useCallback(async () => {
     if (isPlayingRef.current || startingRef.current) return   // 防并发重复起播
     startingRef.current = true
+    setEverPlayed(true)
     try {
       const ok = await ensureLoaded()
       if (!ok) return
@@ -542,6 +545,15 @@ export default function Music() {
       if (e.isIntersecting) { e.target.classList.add('visible'); io.disconnect() }
     }, { threshold: 0.08 })
     if (sectionRef.current) io.observe(sectionRef.current)
+    return () => io.disconnect()
+  }, [])
+
+  // 页脚进入视口 → 收起浮动播放器，避免压住版权/联系信息
+  useEffect(() => {
+    const footer = document.getElementById('contact')
+    if (!footer) return
+    const io = new IntersectionObserver(([e]) => setHideMini(e.isIntersecting), { threshold: 0.15 })
+    io.observe(footer)
     return () => io.disconnect()
   }, [])
 
@@ -704,8 +716,9 @@ export default function Music() {
       <p className="music-note">* 由 demucs (htdemucs_6s) 从原曲分离的真实 6 轨音频。</p>
     </section>
 
-    {/* ── 右下角浮动迷你播放器（全站常驻，共用同一音频引擎）── */}
-    <div className={`mini-player${state.isPlaying ? ' on' : ''}`}>
+    {/* ── 右下角浮动迷你播放器（首次播放后挂载，共用同一音频引擎）── */}
+    {everPlayed && (
+    <div className={`mini-player${state.isPlaying ? ' on' : ''}${hideMini ? ' tucked' : ''}`}>
       <button
         className="mini-btn"
         onClick={() => state.isPlaying ? stopPlay() : startPlay()}
@@ -724,6 +737,7 @@ export default function Music() {
         </div>
       </div>
     </div>
+    )}
     </>
   )
 }

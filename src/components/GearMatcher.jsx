@@ -173,6 +173,7 @@ function GearImg({ id }) {
       src={`${BASE}gear/${id}.png`}
       alt=""
       loading="lazy"
+      draggable={false}
       onError={() => setErr(true)}
     />
   )
@@ -240,30 +241,49 @@ export default function GearMatcher({ onSelect }) {
 
   const assign = (kind, id) => kind === 'body' ? setSlotBody(id) : setSlotGlass(id)
 
-  // 指针拖拽（兼容触摸）：拖进取景台或就地点一下都算选中
+  // 兜底：任何指针抬起/取消/失焦都清掉跟手虚影（防 pointercancel 导致虚影卡住）
+  useEffect(() => {
+    const clear = () => setGhost(null)
+    window.addEventListener('pointerup', clear)
+    window.addEventListener('pointercancel', clear)
+    window.addEventListener('blur', clear)
+    return () => {
+      window.removeEventListener('pointerup', clear)
+      window.removeEventListener('pointercancel', clear)
+      window.removeEventListener('blur', clear)
+    }
+  }, [])
+
+  // 指针拖拽（兼容触摸）：拖动过就算选中(不强求精确落在框内)；纯点击由 onClick 兜底
   const startDrag = (kind, id) => e => {
     const sx = e.clientX, sy = e.clientY
-    setGhost({ id, x: sx, y: sy })
-    const move = ev => setGhost(g => g && { ...g, x: ev.clientX, y: ev.clientY })
-    const up = ev => {
+    let moved = false
+    const move = ev => {
+      if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 5) moved = true
+      if (moved) setGhost({ id, x: ev.clientX, y: ev.clientY })
+    }
+    const end = (ev, cancelled) => {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', cancel)
       setGhost(null)
-      const z = zoneRef.current?.getBoundingClientRect()
-      const inZone = z && ev.clientX >= z.left && ev.clientX <= z.right && ev.clientY >= z.top && ev.clientY <= z.bottom
-      const moved = Math.hypot(ev.clientX - sx, ev.clientY - sy) > 6
-      if (moved && inZone) assign(kind, id)   // 拖进取景台；点选(未移动)交给 onClick
+      if (!cancelled && moved) assign(kind, id)   // 拖动结束 = 选中；取消/没拖动则不选
     }
+    const up = ev => end(ev, false)
+    const cancel = ev => end(ev, true)
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', cancel)
   }
 
   const reset = () => { setSlotBody(null); setSlotGlass(null); setPhase('idle') }
 
-  const Tile = ({ kind, def }) => {
+  // 内联渲染一个器材格（不抽成内部组件，否则每次 render 会整组卸载重建）
+  const renderTile = (kind, def) => {
     const used = (kind === 'body' ? slotBody : slotGlass) === def.id
     return (
       <button
+        key={def.id}
         type="button"
         className={`gear-tile${used ? ' used' : ''}`}
         onPointerDown={startDrag(kind, def.id)}
@@ -284,10 +304,10 @@ export default function GearMatcher({ onSelect }) {
         {/* 左：器材货架 */}
         <div className="gear-shelf">
           <div className="gear-row-lbl">Body / 机身</div>
-          <div className="tile-row">{BODIES.map(b => <Tile key={b.id} kind="body" def={b} />)}</div>
+          <div className="tile-row">{BODIES.map(b => renderTile('body', b))}</div>
 
           <div className="gear-row-lbl">Glass / 镜头</div>
-          <div className="tile-row">{GLASS.map(g => <Tile key={g.id} kind="lens" def={g} />)}</div>
+          <div className="tile-row">{GLASS.map(g => renderTile('lens', g))}</div>
 
           {isFilm && (
             <>
