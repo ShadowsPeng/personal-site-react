@@ -11,14 +11,6 @@ const STATS = [
   { k: '城市', v: '上海' },
 ]
 
-const SKETCH = [
-  { title: '自然是底色', desc: '摄影、观鸟、户外，对我其实是同一件事——记录美、观察生命、走进自然里。' },
-  { title: '务实的理想主义', desc: '会想意义和长远，但更清楚得先把眼前的现实问题解决好。' },
-  { title: '更想连接', desc: '让我有劲的是体验和与人的连接，不是争个输赢。朋友里常是穿针引线那个。' },
-  { title: '对己抠，对人大方', desc: '给自己抠性价比，给朋友挺舍得，请客分享不含糊。' },
-  { title: '稳，也爱笑', desc: '日常基调是开心和喜欢，事儿越大反而越能稳住场面。' },
-]
-
 export default function About() {
   const ref = useRef(null)
 
@@ -48,17 +40,6 @@ export default function About() {
           </div>
           <div className="traits">
             {TRAITS.map(t => <span key={t} className="trait">{t}</span>)}
-          </div>
-          <div className="ai-review">
-            <div className="ai-review-label">性格速写</div>
-            <ul>
-              {SKETCH.map(s => (
-                <li key={s.title}>
-                  <strong>{s.title}</strong>
-                  <span>{s.desc}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
         <div className="about-portrait">

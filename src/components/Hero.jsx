@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 const BASE = import.meta.env.BASE_URL
 
 // 首屏延时视频（已转码为 1080p 网页背景）
-const VIDS = ['t5.mp4', 't4.mp4', 't1.mp4', 't2.mp4', 't3.mp4']
+const VIDS = ['t5-web.mp4', 't4.mp4', 't1.mp4', 't2.mp4', 't3.mp4']
 // 视频不可用时的图片轮播兜底（降低动效 / 省流量 / 旧设备）
 const SHOTS = ['dusk.jpg', 'city-lujiazui.jpg', 'sunrise.jpg', 'firework-disney-01.jpg', 'city-nanpu.jpg']
 const POSTER = 'photos/dusk.jpg'

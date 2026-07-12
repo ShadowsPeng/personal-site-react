@@ -1,6 +1,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
+/* ============ 主题变量（dark / light / mono） ============ */
+
+/* 默认 = dark（暖金暗色，向下兼容未设置 data-theme 的情况） */
+:root,
+html[data-theme="dark"] {
   --bg:       #0b0b0a;
   --surface:  #131312;
   --surface-h:#0e0e0d;
@@ -9,7 +13,59 @@
   --text-2:   #7a7a72;
   --text-3:   #57574f;
   --accent:   #d4b896;
+  --accent-soft: rgba(212, 184, 150, .10);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,.42);
+  --shadow-md: 0 10px 34px rgba(0,0,0,.45);
+  /* LUT: 内容照片滤镜（证件照/器材产品图不应用） */
+  --img-filter: none;
+  /* 在照片背景上的文字色（hero desc / 舞台乐手 / 网格 caption / 迷你播放器） */
+  --on-photo:      #ede9e0;
+  --on-photo-soft: rgba(237, 233, 224, .78);
 }
+
+/* light：浅米底 + 暗金 accent，日间/打印/分享截图友好 */
+html[data-theme="light"] {
+  --bg:       #f4f3ee;
+  --surface:  #ffffff;
+  --surface-h:#ebe9e2;
+  --border:   #d8d4ca;
+  --text-1:   #1a1814;
+  --text-2:   #6b665b;
+  --text-3:   #968f80;
+  --accent:   #a8895e;
+  --accent-soft: rgba(168, 137, 94, .10);
+  --shadow-lg: 0 16px 40px rgba(60,50,30,.18);
+  --shadow-md: 0 10px 34px rgba(60,50,30,.14);
+  /* LUT: 轻微提亮,匹配日间界面 */
+  --img-filter: saturate(1.04) brightness(1.02);
+  /* 浅色 LUT + 亮照片 → 用深棕保证对比 */
+  --on-photo:      #1a1814;
+  --on-photo-soft: rgba(26, 24, 20, .82);
+}
+
+/* mono：纯黑白，胶片作品/极简 */
+html[data-theme="mono"] {
+  --bg:       #ffffff;
+  --surface:  #f6f6f6;
+  --surface-h:#ececec;
+  --border:   #d4d4d4;
+  --text-1:   #0a0a0a;
+  --text-2:   #555555;
+  --text-3:   #888888;
+  --accent:   #1a1a1a;
+  --accent-soft: rgba(0, 0, 0, .06);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,.14);
+  --shadow-md: 0 10px 34px rgba(0,0,0,.10);
+  /* LUT: 黑白 LUT（去色 + 微对比） */
+  --img-filter: grayscale(1) contrast(1.05);
+  /* 黑白 LUT + 黑白照片 → 黑色字（白底界面对齐；照片上浅色区域用 text-shadow 兜底） */
+  --on-photo:      #0a0a0a;
+  --on-photo-soft: rgba(10, 10, 10, .78);
+}
+
+/* 切换时整体平滑过渡（只过渡色板相关属性，避免影响 transform/animation） */
+html { scroll-behavior: smooth; transition: background-color .35s ease, color .35s ease; }
+body { transition: background-color .35s ease, color .35s ease; }
 
 html { scroll-behavior: smooth; }
 
@@ -39,17 +95,30 @@ body {
   background: linear-gradient(rgba(11,11,10,.8), transparent);
   transition: background .3s;
 }
-.nav.scrolled { background: rgba(11,11,10,.88); backdrop-filter: blur(14px); }
+.nav.scrolled { background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(14px); }
 .nav-logo {
   font-family: 'Instrument Serif', 'Noto Serif SC', serif; font-size: 18px; letter-spacing: .02em;
   color: var(--text-1); text-decoration: none;
 }
-.nav-links { display: flex; gap: 36px; list-style: none; }
+.nav-links { display: flex; gap: 36px; list-style: none; align-items: center; }
 .nav-links a {
   color: var(--text-2); text-decoration: none;
   font-size: 12px; letter-spacing: .08em; text-transform: uppercase; transition: color .2s;
 }
 .nav-links a:hover { color: var(--text-1); }
+
+/* NAV 主题切换（3 个小圆点 swatch） */
+.nav-themes { display: flex; gap: 8px; align-items: center; margin-left: 4px; }
+.swatch {
+  width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+  border: 1.5px solid var(--border); padding: 0; position: relative;
+  transition: transform .2s ease, border-color .2s ease;
+}
+.swatch:hover { transform: scale(1.14); }
+.swatch[aria-pressed="true"] { border-color: var(--text-1); transform: scale(1.1); }
+.sw-dark  { background: linear-gradient(135deg, #0b0b0a 50%, #d4b896 50%); }
+.sw-light { background: linear-gradient(135deg, #f4f3ee 50%, #a8895e 50%); }
+.sw-mono  { background: linear-gradient(135deg, #ffffff 50%, #1a1a1a 50%); }
 
 /* HERO：整页照片 + 霓虹质感（原片不做旧） */
 .hero { height: 100vh; position: relative; display: flex; align-items: center; overflow: hidden; perspective: 1200px; }
@@ -59,7 +128,8 @@ body {
 .hero-bg img {
   position: absolute; inset: 0;
   width: 100%; height: 100%; object-fit: cover;
-  opacity: 0; transition: opacity 1.6s ease;       /* 交叉淡入 */
+  opacity: 0; transition: opacity 1.6s ease, filter .35s ease;       /* 交叉淡入 */
+  filter: var(--img-filter);
 }
 .hero-bg img.on {
   opacity: 1;
@@ -73,7 +143,8 @@ body {
 }
 .hero-video {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  opacity: 0; transition: opacity 1s ease;          /* DOM 顺序在 poster 之后 → 自然叠在上层 */
+  opacity: 0; transition: opacity 1s ease, filter .35s ease;          /* DOM 顺序在 poster 之后 → 自然叠在上层 */
+  filter: var(--img-filter);
 }
 .hero-video.on { opacity: 1; }
 /* 仅保留文字可读所需的柔和暗化：左侧给大字、底部给四角小字，纯黑系不发蓝 */
@@ -132,10 +203,10 @@ body {
 .hero-sub {
   margin-top: 20px; font-family: 'Instrument Serif','Noto Serif SC',serif;
 }
-.hero-sub em { font-style: italic; font-size: 24px; color: rgba(237,233,224,.78); letter-spacing: .04em; }
+.hero-sub em { font-style: italic; font-size: 24px; color: var(--on-photo-soft); letter-spacing: .04em; }
 .hero-desc {
   margin-top: 22px; max-width: 430px; font-size: 14px; font-weight: 300;
-  color: rgba(237,233,224,.84); line-height: 2.05; text-shadow: 0 1px 14px rgba(0,0,0,.5);
+  color: var(--on-photo-soft); line-height: 2.05; text-shadow: 0 1px 14px rgba(0,0,0,.5);
 }
 
 /* 四角编辑式小字 */
@@ -200,12 +271,20 @@ body {
 /* 性格 / 身份坐标 */
 .stats {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
-  margin-top: 34px; background: var(--border);
-  border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  margin-top: 34px;
+  border-radius: 6px; overflow: hidden;
 }
-.stat { background: var(--surface); padding: 14px 12px; display: flex; flex-direction: column; gap: 5px; }
+.stat { padding: 14px 12px; display: flex; flex-direction: column; gap: 5px; }
 .stat-k { font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-3); }
 .stat-v { font-size: 15px; color: var(--accent); font-weight: 500; letter-spacing: .02em; }
+
+/* 主题直接控制 .stats / .stat 背景色（绕开 var() 在某些元素上的解析边界） */
+html[data-theme="dark"]  .stats { background: #252523; border: 1px solid #252523; }
+html[data-theme="dark"]  .stat  { background: #131312; }
+html[data-theme="light"] .stats { background: #d8d4ca; border: 1px solid #d8d4ca; }
+html[data-theme="light"] .stat  { background: #ffffff; }
+html[data-theme="mono"]  .stats { background: #d4d4d4; border: 1px solid #d4d4d4; }
+html[data-theme="mono"]  .stat  { background: #f6f6f6; }
 
 .traits { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
 .trait {
@@ -215,30 +294,11 @@ body {
 }
 .trait:hover { border-color: var(--text-3); color: var(--text-1); }
 
-/* AI 画像 */
-.ai-review { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--border); }
-.ai-review-label {
-  font-size: 11px; color: var(--text-3); letter-spacing: .12em; margin-bottom: 18px;
-}
-.ai-review ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
-.ai-review li { display: flex; align-items: baseline; gap: 18px; }
-.ai-review li strong {
-  flex: none; width: 8.6em; text-align: right; white-space: nowrap;
-  font-size: 13px; color: var(--text-1);
-  font-weight: 600; letter-spacing: .04em;
-}
-.ai-review li span { font-size: 13px; color: var(--text-2); line-height: 1.8; }
-/* 窄屏：标题改为独占一行，避免右对齐列挤压说明文字 */
-@media (max-width: 560px) {
-  .ai-review li { flex-direction: column; gap: 4px; }
-  .ai-review li strong { width: auto; text-align: left; }
-}
-
 /* 关于我 · 证件照卡片 */
 .about-portrait {
   max-width: 280px; margin: 0 auto;
-  border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
-  background: var(--surface); box-shadow: 0 16px 40px rgba(0,0,0,.42);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: var(--shadow-lg);
 }
 .about-portrait img { display: block; width: 100%; height: auto; }
 .about-portrait-cap { padding: 13px 16px 15px; }
@@ -250,6 +310,14 @@ body {
   display: block; margin-top: 4px; font-size: 9px; letter-spacing: .15em;
   text-transform: uppercase; color: var(--text-3);
 }
+
+/* 主题直接控制证件照卡片色（绕开 var() 边界） */
+html[data-theme="dark"]  .about-portrait      { background: #131312; border: 1px solid #252523; }
+html[data-theme="dark"]  .about-portrait-cap  { background: #131312; }
+html[data-theme="light"] .about-portrait      { background: #ffffff; border: 1px solid #d8d4ca; }
+html[data-theme="light"] .about-portrait-cap  { background: #ffffff; }
+html[data-theme="mono"]  .about-portrait      { background: #f6f6f6; border: 1px solid #d4d4d4; }
+html[data-theme="mono"]  .about-portrait-cap  { background: #f6f6f6; }
 
 /* MUSIC */
 .music-intro { font-size: 13px; color: var(--text-2); margin: 0 auto 40px; max-width: 480px; line-height: 1.9; text-align: center; }
@@ -448,7 +516,7 @@ body {
 
 .member-name {
   position: relative; z-index: 2;
-  font-size: 11px; color: #ded6c6; font-weight: 500; letter-spacing: .1em; margin-top: 2px;
+  font-size: 11px; color: var(--on-photo); font-weight: 500; letter-spacing: .1em; margin-top: 2px;
   text-shadow: 0 0 6px rgba(0,0,0,.6);
 }
 .member-name em {
@@ -495,7 +563,7 @@ body {
 .m-solo {
   font-size: 8px; font-weight: 600; letter-spacing: .1em;
   padding: 3px 7px; background: rgba(255,255,255,.04);
-  border: 1px solid rgba(200,184,150,.32); color: #b7ad9a;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); color: var(--on-photo-soft);
   cursor: pointer; border-radius: 3px; transition: all .15s;
 }
 .m-solo:hover { border-color: var(--accent); color: var(--accent); }
@@ -508,19 +576,19 @@ body {
   position: fixed; right: 22px; bottom: 22px; z-index: 120;
   display: flex; align-items: center; gap: 12px;
   padding: 10px 16px 10px 10px; border-radius: 40px;
-  background: rgba(20,18,14,.74); backdrop-filter: blur(14px);
-  border: 1px solid rgba(212,184,150,.22);
-  box-shadow: 0 10px 34px rgba(0,0,0,.45);
+  background: color-mix(in srgb, var(--bg) 74%, transparent); backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: var(--shadow-md);
   transition: border-color .3s, box-shadow .3s, transform .35s ease, opacity .35s ease;
 }
-.mini-player.on { border-color: rgba(212,184,150,.5); box-shadow: 0 10px 38px rgba(120,90,40,.4); }
+.mini-player.on { border-color: color-mix(in srgb, var(--accent) 50%, transparent); box-shadow: 0 10px 38px rgba(120,90,40,.4); }
 /* 滚到页脚时收起，不再压住页脚版权行 */
 .mini-player.tucked { transform: translateY(160%); opacity: 0; pointer-events: none; }
 .mini-btn {
   flex: none; width: 38px; height: 38px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(200,184,150,.32); background: rgba(255,255,255,.04);
-  color: #ded6c6; cursor: pointer; transition: all .2s;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); background: rgba(255,255,255,.04);
+  color: var(--on-photo); cursor: pointer; transition: all .2s;
 }
 .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
 .mini-btn:disabled { opacity: .5; cursor: default; }
@@ -550,7 +618,7 @@ body {
   color: var(--text-3); margin: 18px 0 4px;
 }
 .g-img { max-width: 104px; max-height: 66px; object-fit: contain; display: block; }
-.g-fallback { color: #44443f; }
+.g-fallback { color: var(--text-3); }
 .g-fallback svg { display: block; }
 
 /* ── 推箱子组装台 ── */
@@ -719,12 +787,13 @@ body {
   opacity: 0; transition: opacity .3s; mix-blend-mode: overlay;
 }
 .sq-item:hover::after { opacity: 1; }
-.sq-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .55s ease; }
+.sq-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .55s ease, filter .35s ease; filter: var(--img-filter); }
 .sq-item:hover img { transform: scale(1.04); }
 .sq-cap {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
   padding: 26px 14px 12px; background: linear-gradient(transparent, rgba(0,0,0,.66));
-  font-size: 11px; font-weight: 300; color: rgba(237,233,224,.78); letter-spacing: .08em;
+  font-size: 11px; font-weight: 300; color: var(--on-photo-soft); letter-spacing: .08em;
+  text-shadow: 0 1px 6px rgba(0,0,0,.5);
   opacity: 0; transform: translateY(4px); transition: opacity .35s, transform .35s;
 }
 .sq-item:hover .sq-cap { opacity: 1; transform: translateY(0); }
@@ -743,7 +812,8 @@ body {
 .lightbox-img {
   max-width: 92vw; max-height: 84vh; object-fit: contain;
   border-radius: 3px; box-shadow: 0 24px 70px rgba(0,0,0,.6);
-  animation: lb-in .25s ease; transition: transform .12s ease-out; user-select: none;
+  animation: lb-in .25s ease; transition: transform .12s ease-out, filter .35s ease; user-select: none;
+  filter: var(--img-filter);
 }
 @keyframes lb-in { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
 .lb-x {
